@@ -1,0 +1,50 @@
+# --- Python / venv ---
+.venv/
+venv/
+ENV/
+env/
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+.python-version
+
+# --- Packaging / build ---
+build/
+dist/
+*.whl
+*.egg
+*.tar.gz
+
+# --- Logs / temp ---
+*.log
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# --- IDE / editor ---
+.vscode/
+.idea/
+*.iml
+
+# --- Jupyter ---
+.ipynb_checkpoints/
+
+# --- Test / coverage ---
+.pytest_cache/
+.coverage
+htmlcov/
+.coverage.*
+coverage.xml
+
+# --- Output artifacts ---
+out/
+*.xlsx
+
+# --- Local raw debug artifacts (if you ever save elsewhere) ---
+raw/
