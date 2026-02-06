@@ -1,0 +1,24 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: joblens-postgres
+    environment:
+      POSTGRES_DB: ${DB_NAME:-joblens}
+      POSTGRES_USER: ${DB_USERNAME:-joblens}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - joblens_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${DB_USERNAME:-joblens} -d ${DB_NAME:-joblens}",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  joblens_pgdata:
