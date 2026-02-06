@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: api
+
+  datasource:
+    url: ${POSTGRES_DB:jdbc:postgresql://localhost:5432/joblens}
+    username: ${POSTGRES_USER:joblens}
+    password: ${POSTGRES_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+
+  docker:
+    compose:
+      file: api/docker-compose.yml
+
+server:
+  port: 8080
