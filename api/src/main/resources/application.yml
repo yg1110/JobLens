@@ -19,3 +19,107 @@ spring:
 
 server:
   port: 8080
+
+joblens:
+  scoring:
+    hardFilter:
+      contract:
+        - "계약직"
+        - "기간제"
+        - "계약 사원"
+      nonDevRoles:
+        - "마케팅"
+        - "디자이너"
+        - "영업"
+        - "기획자"
+        - "PM"
+        - "운영 매니저"
+    role:
+      frontend:
+        - "프론트엔드"
+        - "front-end"
+        - "frontend"
+        - "React"
+        - "Vue"
+      fullstack:
+        - "풀스택"
+        - "full-stack"
+        - "full stack"
+      backend:
+        - "백엔드"
+        - "back-end"
+        - "backend"
+    employment:
+      fulltime:
+        - "정규직"
+      dispatch:
+        - "파견"
+        - "프리랜서"
+      conversionIntern:
+        - "전환형 인턴"
+        - "전환형인턴"
+      intern:
+        - "인턴"
+    experience:
+      target_3_6:
+        - "경력 3년 이상"
+        - "3~6년"
+        - "3-6년"
+        - "3년 이상 6년 이하"
+      entry_or_any:
+        - "신입"
+        - "신입/경력"
+        - "신입 및 경력"
+      seven_plus:
+        - "7년 이상"
+        - "7년차 이상"
+      long_term:
+        - "8년 이상"
+        - "10년 이상"
+        - "5~15년"
+    stack:
+      e1:
+        - "Spring Boot"
+        - "Spring WebFlux"
+      e2:
+        - "React"
+        - "Vue"
+        - "Next.js"
+      e3:
+        - "Node.js"
+        - "Express"
+      e4:
+        - "JSP"
+      e5:
+        - "PHP"
+      e6:
+        - "Kotlin"
+        - "Java"
+    jsp:
+      - "JSP"
+      - "jsp"
+    domain:
+      product:
+        - "자체 서비스"
+        - "플랫폼"
+        - "제품 회사"
+        - "서비스 기획 및 운영"
+      mixed:
+        - "SI 및 서비스"
+        - "금융 및 플랫폼"
+      legacy_finance:
+        - "금융 SI"
+        - "카드사"
+        - "은행"
+        - "보험사"
+    culturePositive:
+      - "유연 근무제"
+      - "재택 근무"
+      - "하이브리드 근무"
+      - "자율 출퇴근"
+      - "선택적 근로시간제"
+      - "워라밸"
+      - "복지 포인트"
+      - "리프레시 휴가"
+      - "점심 식대 제공"
+      - "석식 지원"
