@@ -27,6 +27,11 @@
 - **JSON 저장**
   - `JobPosting` dataclass를 `asdict()`로 직렬화하여 파일 저장
 
+- **HTTP API 래핑(FastAPI)**
+  - CLI와 동일한 옵션을 HTTP POST 요청으로 받아 크롤링 실행 (`/crawl`)
+  - 이미 저장된 JSON 결과를 HTTP GET으로 조회 (`/jobs`)
+  - `/docs`(Swagger UI), `/redoc`을 통해 스키마/예제 자동 문서화
+
 ---
 
 ## Project Structure (예시)
@@ -168,6 +173,136 @@ python main.py --debug
 | `--ocr-max-images`   | OCR 이미지 상한            | `5`                 |
 | `--debug`            | 디버그 출력                | false               |
 | `--out`              | 저장 파일명                | `saramin_jobs.json` |
+
+---
+
+## Usage (API 서버)
+
+`api_app.py`는 위 크롤러를 **FastAPI 기반 HTTP API** 로 감싼 모듈입니다.
+
+### 1) 서버 실행
+
+`crawler` 디렉터리에서:
+
+```bash
+uvicorn api_app:app --reload --port 8000
+```
+
+실행 후 브라우저에서:
+
+- 문서: `http://localhost:8000/docs` (Swagger UI)
+- 대안 문서: `http://localhost:8000/redoc`
+- 헬스체크: `http://localhost:8000/health`
+
+### 2) 엔드포인트 개요
+
+- `GET /health`
+  - 단순 헬스체크. `{ "status": "ok" }` 형태의 JSON 반환.
+
+- `POST /crawl`
+  - 본문(`application/json`)으로 크롤링 옵션을 전달하고, 크롤링을 즉시 실행 후 결과를 JSON으로 반환.
+  - 요청 Body 스키마: `CrawlRequest`
+
+    ```json
+    {
+      "url": "https://www.saramin.co.kr/zf_user/jobs/list/job-category...",
+      "pages": 1,
+      "list_delay": 1.8,
+      "detail": false,
+      "detail_limit": null,
+      "detail_delay": 1.2,
+      "save_detail_html": false,
+      "ocr": false,
+      "ocr_lang": "kor+eng",
+      "ocr_max_images": 5,
+      "save_to_file": false,
+      "out": "saramin_jobs.json"
+    }
+    ```
+
+  - 응답 Body 스키마: `CrawlResponse`
+
+    ```json
+    {
+      "count": 10,
+      "saved_to_file": false,
+      "file_path": null,
+      "jobs": [
+        {
+          "title": "...",
+          "company": "...",
+          "url": "...",
+          "location": "서울 ...",
+          "job_condition": "...",
+          "sector": "...",
+          "deadline": "...",
+          "scraped_at": 1738800000.0,
+          "source_page": 1,
+          "detail_iframe_url": "...",
+          "detail_sections": {
+            "주요업무": "...",
+            "자격요건": "...",
+            "우대사항": "..."
+          },
+          "detail_html": null
+        }
+      ]
+    }
+    ```
+
+- `GET /jobs`
+  - 이미 JSON 파일로 저장된 결과를 읽어오는 엔드포인트.
+  - 쿼리 파라미터:
+    - `file`: 조회할 JSON 파일 경로 (기본값: `saramin_jobs.json`)
+  - 응답 Body 스키마: `JobsFileResponse`
+
+    ```json
+    {
+      "count": 10,
+      "file_path": "saramin_jobs.json",
+      "jobs": [
+        {
+          "title": "...",
+          "company": "...",
+          "url": "...",
+          "location": "서울 ...",
+          "job_condition": "...",
+          "sector": "...",
+          "deadline": "...",
+          "scraped_at": 1738800000.0,
+          "source_page": 1,
+          "detail_iframe_url": "...",
+          "detail_sections": {
+            "주요업무": "...",
+            "자격요건": "...",
+            "우대사항": "..."
+          },
+          "detail_html": null
+        }
+      ]
+    }
+    ```
+
+### 3) curl 예시
+
+- 목록 2페이지 + 상세 + 파일 저장:
+
+```bash
+curl -X POST "http://localhost:8000/crawl" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "pages": 2,
+    "detail": true,
+    "save_to_file": true,
+    "out": "saramin_jobs.json"
+  }'
+```
+
+- 저장된 결과 조회:
+
+```bash
+curl "http://localhost:8000/jobs?file=saramin_jobs.json"
+```
 
 ---
 
