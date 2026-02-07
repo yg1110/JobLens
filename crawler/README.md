@@ -95,6 +95,32 @@ brew install tesseract tesseract-lang
 
 ---
 
+## Docker로 실행
+
+로컬에 Python을 설치하지 않고 Docker만으로 API 서버를 띄울 수 있습니다. (이미지에 tesseract 포함으로 OCR 옵션 사용 가능)
+
+**단일 서비스만 실행 (crawler만)**
+
+```bash
+cd crawler
+docker build -t joblens-crawler .
+docker run -p 8000:8000 joblens-crawler
+```
+
+- API: `http://localhost:8000`, 문서: `http://localhost:8000/docs`
+
+**프로젝트 루트에서 Crawler + API + PostgreSQL 통합 실행**
+
+```bash
+# 프로젝트 루트(JobLens/)에서
+export DB_PASSWORD=your_db_password   # 필수
+docker compose up -d
+```
+
+- Crawler: `http://localhost:8000`, API: `http://localhost:8080`, PostgreSQL: `localhost:5432`
+
+---
+
 ## Usage (CLI)
 
 ### 기본: 목록 1페이지 수집 → JSON 저장

@@ -38,7 +38,28 @@
 
 ## Quick Start
 
-### 1) Crawler 실행
+### Docker로 통합 실행 (권장)
+
+프로젝트 루트에서 Crawler + API + PostgreSQL을 한 번에 띄웁니다.
+
+```bash
+# 루트(JobLens/)에서
+export DB_PASSWORD=your_db_password   # 필수. SMTP 등은 선택: SMTP_USERNAME, SMTP_PASSWORD 등
+docker compose up -d
+```
+또는 루트에 `.env` 파일을 만들고 `DB_PASSWORD=your_db_password` 를 넣으면 `docker compose up -d` 만 실행하면 됩니다.
+
+- **Crawler**: http://localhost:8000 (문서: `/docs`)
+- **API**: http://localhost:8080 (Swagger: `/swagger-ui.html`)
+- **PostgreSQL**: localhost:5432
+
+중지: `docker compose down`
+
+---
+
+### 수동 실행 (로컬에 Python + Java 설치)
+
+#### 1) Crawler 실행
 
 ```bash
 cd crawler
@@ -50,7 +71,7 @@ python main.py --detail --out saramin_jobs.json
 uvicorn api_app:app --port 8000
 ```
 
-### 2) API 실행
+#### 2) API 실행
 
 ```bash
 cd api
@@ -59,7 +80,7 @@ docker-compose up -d   # PostgreSQL
 ./gradlew bootRun
 ```
 
-### 3) 기본 흐름
+#### 3) 기본 흐름
 
 - **크롤러**가 `saramin_jobs.json`에 공고 저장
 - **API**가 `GET /jobs`로 공고 조회 → bulk 저장 또는 스코어링

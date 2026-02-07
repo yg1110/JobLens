@@ -116,6 +116,30 @@ docker-compose up -d
 
 또는 `spring-boot-docker-compose`가 있으면 DB 자동 기동 후 실행됩니다.
 
+### 3) Docker로 실행
+
+**API 단일 이미지 (DB는 별도 필요)**
+
+```bash
+cd api
+docker build -t joblens-api .
+docker run -p 8080:8080 \
+  -e POSTGRES_DB=jdbc:postgresql://host.docker.internal:5432/joblens \
+  -e POSTGRES_USER=joblens \
+  -e POSTGRES_PASSWORD=your_password \
+  joblens-api
+```
+
+**프로젝트 루트에서 Crawler + API + PostgreSQL 통합 실행**
+
+```bash
+# 프로젝트 루트(JobLens/)에서
+export DB_PASSWORD=your_db_password   # 필수
+docker compose up -d
+```
+
+- API: `http://localhost:8080`, Crawler: `http://localhost:8000`, PostgreSQL: `localhost:5432`
+
 ---
 
 ## Usage
