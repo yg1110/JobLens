@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 
+import json
 import random
 import time
 from dataclasses import asdict
+from pathlib import Path
 from typing import Dict, List, Optional
 from urllib.parse import urlparse
 
@@ -202,13 +204,29 @@ def enrich_jobs_with_details(
     return out
 
 
+def load_json(path: str) -> List[Dict]:
+    """
+    JSON 파일에서 채용 공고 목록을 로드한다.
+    - 파일이 없거나 형식이 잘못된 경우 빈 리스트 반환
+    """
+    p = Path(path)
+    if not p.is_file():
+        return []
+    try:
+        with p.open("r", encoding="utf-8") as f:
+            data = json.load(f)
+        if not isinstance(data, list):
+            return []
+        return data
+    except (json.JSONDecodeError, OSError):
+        return []
+
+
 def save_json(path: str, jobs: List[JobPosting]) -> None:
     """
     JobPosting 리스트를 JSON 파일로 저장한다.
     - dataclasses.asdict로 직렬화 가능한 dict로 변환 후 dump
     """
-    import json
-
     # dataclass -> dict 변환(중첩도 재귀 변환)
     payload = [asdict(j) for j in jobs]
 

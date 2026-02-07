@@ -7,7 +7,7 @@ from typing import Dict, List, Optional
 from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel, Field, ConfigDict
 
-from saramin.crawler import crawl_list, enrich_jobs_with_details
+from saramin.crawler import crawl_list, enrich_jobs_with_details, load_json
 from saramin.list_urls import with_recruit_page_count
 from saramin.models import JobPosting
 
@@ -264,6 +264,10 @@ def run_crawl(req: CrawlRequest) -> CrawlResponse:
       3) 필요 시 JSON 파일로 저장
       4) 결과를 바로 JSON 으로 반환
     """
+    # 0) 기존 저장 파일에서 이미 수집된 공고 URL 로드 (중복 스킵용)
+    existing_jobs = load_json(req.out)
+    existing_urls = {j.get("url") for j in existing_jobs if j.get("url")}
+
     # 1) 목록 수집 (recruitPageCount 지정 시 URL에 반영)
     list_url = req.url
     if req.recruit_page_count is not None:
@@ -273,6 +277,9 @@ def run_crawl(req: CrawlRequest) -> CrawlResponse:
         pages=req.pages,
         delay=req.list_delay,
     )
+
+    # 1-1) 이미 saramin_jobs.json(또는 req.out)에 있는 공고는 스킵
+    jobs = [j for j in jobs if j.url not in existing_urls]
 
     # 2) 상세 수집(옵션)
     if req.detail:
@@ -291,11 +298,14 @@ def run_crawl(req: CrawlRequest) -> CrawlResponse:
     saved_to_file = False
     file_path: Optional[str] = None
 
-    # 3) 파일 저장(옵션)
+    # 3) 파일 저장(옵션): 기존 공고 + 신규 공고 병합 저장
     if req.save_to_file:
-        from saramin.crawler import save_json
+        import json
 
-        save_json(req.out, jobs)
+        new_dicts = [asdict(j) for j in jobs]
+        all_dicts = existing_jobs + new_dicts
+        with open(req.out, "w", encoding="utf-8") as f:
+            json.dump(all_dicts, f, ensure_ascii=False, indent=2)
         saved_to_file = True
         file_path = req.out
 
