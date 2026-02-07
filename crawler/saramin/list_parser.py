@@ -68,18 +68,19 @@ def find_list_items(soup: BeautifulSoup) -> List[Any]:
 
     우선순위:
     1) div 기반 리스트 컨테이너(템플릿에 따라 class가 다를 수 있어 여러 후보 시도)
-       - 최소 3개 이상일 때만 '목록 구조로 확신'하고 반환
-         (1~2개면 광고/추천/유사 블록일 가능성이 있어 방지)
+       - item_recruit/list_item: 1개 이상이면 목록으로 인정(recruitPageCount=1 등 대응)
+       - 그 외 일반 div.item: 3개 이상일 때만 인정(광고/추천 블록 방지)
     2) fallback: 공고 URL 패턴을 가진 a 태그들
-       - div 기반 구조 탐지가 실패한 경우라도 최소한 링크라도 수집 가능
-
-    반환:
-    - 아이템 노드 리스트 (div.item... 또는 a[href*='/zf_user/jobs/'])
     """
-    # div 기반 공고 리스트 탐색(사이트 레이아웃 변화 대응)
-    for sel in ["div.item_recruit", "div.list_item", "div.item", "div.content > div.item"]:
+    # 메인 채용 목록용 selector: 1건만 있어도 목록으로 인정(페이지당 1건 설정 시)
+    for sel in ["div.item_recruit", "div.list_item"]:
         items = soup.select(sel)
-        # 일정 개수 이상이면 실제 리스트일 가능성이 높음
+        if items:
+            return items
+
+    # 일반 div.item 등: 3개 이상일 때만 목록으로 인정(광고/추천 블록 방지)
+    for sel in ["div.item", "div.content > div.item"]:
+        items = soup.select(sel)
         if items and len(items) >= 3:
             return items
 

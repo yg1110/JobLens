@@ -8,6 +8,7 @@ from fastapi import FastAPI, HTTPException, Query
 from pydantic import BaseModel, Field, ConfigDict
 
 from saramin.crawler import crawl_list, enrich_jobs_with_details
+from saramin.list_urls import with_recruit_page_count
 from saramin.models import JobPosting
 
 from main import DEFAULT_URL
@@ -29,12 +30,16 @@ class CrawlRequest(BaseModel):
         ge=1,
         description="목록(list) 페이지를 최대 몇 페이지까지 크롤링할지",
     )
+    recruit_page_count: Optional[int] = Field(
+        None,
+        ge=1,
+        description="페이지당 목록 개수(recruitPageCount). 1, 10, 20, 30, 40, 50, 80, 100 등. 미지정 시 URL 기존값 유지",
+    )
     list_delay: float = Field(
         1.8,
         ge=0.0,
         description="목록 요청 간 기본 딜레이(초)",
     )
-
     # 상세(detail) 관련 옵션
     detail: bool = Field(
         False,
@@ -190,7 +195,6 @@ class CrawlResponse(BaseModel):
     """
     크롤링 결과 응답 모델.
     """
-
     count: int = Field(..., description="수집된 공고 개수")
     saved_to_file: bool = Field(
         ...,
@@ -244,7 +248,6 @@ def health_check() -> Dict[str, str]:
     """
     return {"status": "ok"}
 
-
 @app.post(
     "/crawl",
     response_model=CrawlResponse,
@@ -261,9 +264,12 @@ def run_crawl(req: CrawlRequest) -> CrawlResponse:
       3) 필요 시 JSON 파일로 저장
       4) 결과를 바로 JSON 으로 반환
     """
-    # 1) 목록 수집
+    # 1) 목록 수집 (recruitPageCount 지정 시 URL에 반영)
+    list_url = req.url
+    if req.recruit_page_count is not None:
+        list_url = with_recruit_page_count(req.url, req.recruit_page_count)
     jobs = crawl_list(
-        base_url=req.url,
+        base_url=list_url,
         pages=req.pages,
         delay=req.list_delay,
     )
@@ -272,7 +278,7 @@ def run_crawl(req: CrawlRequest) -> CrawlResponse:
     if req.detail:
         jobs = enrich_jobs_with_details(
             jobs,
-            list_referer=req.url,
+            list_referer=list_url,
             delay=req.detail_delay,
             save_detail_html=req.save_detail_html,
             limit=req.detail_limit,

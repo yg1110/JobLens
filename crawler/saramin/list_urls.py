@@ -41,3 +41,15 @@ def build_paged_url(base_url: str, page: int) -> str:
     # 기존 URL의 다른 구성 요소(scheme, netloc, path, fragment 등)는 그대로 유지하고
     # query만 new_query로 교체하여 최종 URL 생성
     return urlunparse((u.scheme, u.netloc, u.path, u.params, new_query, u.fragment))
+
+
+def with_recruit_page_count(base_url: str, count: int) -> str:
+    """
+    base_url의 쿼리에서 recruitPageCount 파라미터를 설정/갱신한 URL을 반환한다.
+    페이지당 목록 개수(예: 10, 20, 40)를 지정할 때 사용한다.
+    """
+    u = urlparse(base_url)
+    qs = parse_qs(u.query, keep_blank_values=True)
+    qs["recruitPageCount"] = [str(count)]
+    new_query = urlencode(qs, doseq=True)
+    return urlunparse((u.scheme, u.netloc, u.path, u.params, new_query, u.fragment))

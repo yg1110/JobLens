@@ -202,11 +202,13 @@ uvicorn api_app:app --reload --port 8000
 - `POST /crawl`
   - 본문(`application/json`)으로 크롤링 옵션을 전달하고, 크롤링을 즉시 실행 후 결과를 JSON으로 반환.
   - 요청 Body 스키마: `CrawlRequest`
+  - `recruit_page_count`: 페이지당 목록 개수(recruitPageCount). 1, 10, 20, 30, 40, 50, 80, 100 등. `null`이면 URL에 이미 있는 값 유지.
 
     ```json
     {
       "url": "https://www.saramin.co.kr/zf_user/jobs/list/job-category...",
       "pages": 1,
+      "recruit_page_count": null,
       "list_delay": 1.8,
       "detail": false,
       "detail_limit": null,
@@ -214,7 +216,7 @@ uvicorn api_app:app --reload --port 8000
       "save_detail_html": false,
       "ocr": false,
       "ocr_lang": "kor+eng",
-      "ocr_max_images": 5,
+      "ocr_max_images": 3,
       "save_to_file": false,
       "out": "saramin_jobs.json"
     }
