@@ -39,7 +39,6 @@ public class CrawlerClient {
                 ? UriComponentsBuilder.fromPath("/jobs").queryParam("file", file).toUriString()
                 : "/jobs";
 
-        System.out.println("url: " + url);
         try {
             JobsFileResponse response = restClient.get()
                     .uri(url)

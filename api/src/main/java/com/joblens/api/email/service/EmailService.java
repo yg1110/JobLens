@@ -48,6 +48,25 @@ public class EmailService {
         mailSender.send(message);
     }
 
+    /**
+     * 동일 내용을 수신자 리스트 각각에게 발송 (알림용)
+     */
+    public void sendHtmlEmailToMany(java.util.List<String> toList, String subject, String htmlContent) throws MessagingException {
+        for (String to : toList) {
+            if (to != null && !to.isBlank()) {
+                sendHtmlEmail(to, subject, htmlContent);
+            }
+        }
+    }
+
+    public void sendSimpleEmailToMany(java.util.List<String> toList, String subject, String text) {
+        for (String to : toList) {
+            if (to != null && !to.isBlank()) {
+                sendSimpleEmail(to, subject, text);
+            }
+        }
+    }
+
     private String resolveFrom() {
         return (mailFrom != null && !mailFrom.isBlank()) ? mailFrom
                 : (defaultFrom != null && !defaultFrom.isBlank() ? defaultFrom : "noreply@joblens.local");

@@ -43,6 +43,9 @@ dependencies {
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 	implementation 'com.fasterxml.jackson.core:jackson-databind'
 	implementation 'io.github.cdimascio:dotenv-java:3.2.0'
+	implementation 'net.javacrumbs.shedlock:shedlock-core:5.14.0'
+	implementation 'net.javacrumbs.shedlock:shedlock-spring:5.14.0'
+	implementation 'net.javacrumbs.shedlock:shedlock-provider-jdbc-template:5.14.0'
 }
 
 tasks.named('test') {

@@ -135,3 +135,15 @@ joblens:
       - "리프레시 휴가"
       - "점심 식대 제공"
       - "석식 지원"
+
+  notification:
+    enabled: ${NOTIFICATION_ENABLED:true}
+    threshold:
+      immediate: 80 # 이 점수 초과 시 즉시 메일
+      digest: 70 # 이 점수 이상 시 digest 포함
+    quietHours:
+      start: "22:00"
+      end: "08:00"
+    digestTime: "09:00"
+    recipients: ["younggil9488@gmail.com"] # 수신자. NOTIFICATION_RECIPIENTS=a@b.com,b@c.com 또는 yaml에 리스트로 설정
+    crawlerFile: "saramin_jobs.json"

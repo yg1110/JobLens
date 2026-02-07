@@ -1,0 +1,62 @@
+너는 JobLens(Spring Boot) 백엔드 구현 담당이다.
+아래 레퍼런스 파일을 “반드시 직접 열어서” 현재 DTO/리턴 스펙과 메일 발송 방식에 맞게 기능을 구현해라.
+
+[래퍼런스]
+참고 파일 추가
+
+[구현 목표]
+- 매시간마다(정각 기준 OK, 단 구현 편의상 분/초 오프셋 가능) 데이터를 가져와 스코어를 판단한다.
+- 조건:
+  A) 토탈 카운트(=기획 정의의 total score/total count)가 80점 초과(>)이면: 해당 공고는 “즉시 메일 발송”
+  B) 토탈 카운트가 70점 이상(>=)이면: “모아서” 매일 아침 09:00에 digest 메일 발송
+- 스케줄 실행 금지 시간: 22:00 ~ 08:00 (Asia/Seoul)
+  - 이 시간대에는 어떤 fetch/메일 발송도 하지 않는다.
+  - 22~08 사이에 조건을 만족하는 공고가 생겨도, 08시 이후 첫 실행 때 처리하면 된다.
+
+[필수 요구사항(중복/재발송 방지)]
+- “즉시 메일”은 동일 공고에 대해 1회만 발송되어야 한다.
+- “09:00 digest 메일”도 동일 공고가 같은 날(혹은 같은 digest 윈도우) 1회만 포함되어야 한다.
+- 즉시 메일을 보낸 공고는 digest에 다시 넣지 않는다(중복 방지). (단 기획에 다르게 적혀있으면 기획을 우선)
+- 서버가 다중 인스턴스일 수 있음을 고려해 스케줄 중복 실행(레이스) 방지 장치를 둔다.
+  - 예: ShedLock(DB 기반) 또는 DB 락/상태 업데이트를 원자적으로 처리.
+
+[구현 방식 가이드(권장 아키텍처)]
+1) 스케줄러 컴포넌트 신규 생성
+   - 예: com.joblens.api.jobposting.scheduler.JobPostingEmailScheduler
+   - 스케줄 2개를 둔다:
+     (1) Hourly Fetch & Immediate Send: 08:00~21:59 사이 매시간 1회
+     (2) Daily Digest Send: 매일 09:00 1회
+   - 타임존은 Asia/Seoul을 명시한다.
+
+2) 데이터 가져오기/스코어 계산
+   - JobPostingController가 쓰는 서비스/유스케이스를 찾아 동일 로직을 재사용한다.
+   - “토탈 카운트/점수” 값은 기획(@기획.md)의 정의/계산을 따른다.
+   - 매시간 fetch 시점에 “새로 생긴 공고 + 아직 평가/발송 상태가 없는 공고”를 대상으로 처리한다.
+   - 이미 제외/보류 등 상태가 있다면 기획 기준으로 필터링한다.
+
+3) 발송 로직
+- 즉시 발송(>80): 해당 공고를 이메일 전송 서비스(EmailController가 쓰는 EmailService 등)로 발송
+- digest(>=70): 09:00에 모아서 1통으로 발송
+  - digest 대상은 “>=70 && 즉시발송아님 && 아직 digest 포함 안됨”만.
+- 가능하면 템플릿(HTML/텍스트)을 분리하고, 기존 EmailController 방식과 동일하게 처리한다.
+
+4) 상태 저장(필수)
+   - 아래 중 하나 이상으로 “공고별 발송 상태”를 영속화하라:
+     - (권장) job_posting_notification 같은 테이블/엔티티 생성:
+       - posting_id (unique)
+       - immediate_sent_at (nullable)
+       - digest_sent_at (nullable)
+       - last_evaluated_at
+       - total_score_snapshot (optional)
+     - 또는 기존 JobPosting 엔티티에 컬럼 추가(프로젝트 컨벤션에 맞춤)
+   - 즉시 발송/ digest 포함 처리 시 “트랜잭션 + 원자적 업데이트”로 중복 발송을 막아라.
+
+5) 설정/환경변수
+   - application.yml에 아래를 config로 뺀다:
+     - joblens.notification.enabled (boolean)
+     - joblens.notification.threshold.immediate = 80
+     - joblens.notification.threshold.digest = 70
+     - joblens.notification.quietHours.start = 22:00
+     - joblens.notification.quietHours.end = 08:00
+     - joblens.notification.digestTime = 09:00
+     - recipients(수신자 리스트) / from / 기타 메일 설정은 기존 EmailController 정책과 통일

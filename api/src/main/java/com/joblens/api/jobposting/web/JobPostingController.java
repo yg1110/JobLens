@@ -52,7 +52,6 @@ public class JobPostingController {
         List<JobPostingRequest> jobs = crawlerClient.fetchJobs(file);
         List<ScoreResponse> responses = jobs.stream()
                 .map(scoringService::score)
-                .filter(r -> "추천".equals(r.getDecision()))
                 .toList();
         return ResponseEntity.ok(responses);
     }
