@@ -3,8 +3,6 @@ package com.joblens.api.jobposting.scheduler;
 import com.joblens.api.jobposting.notification.JobPostingNotificationService;
 import com.joblens.api.jobposting.notification.NotificationProperties;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -21,7 +19,6 @@ import java.util.Locale;
 @Component
 public class JobPostingEmailScheduler {
 
-    private static final Logger log = LoggerFactory.getLogger(JobPostingEmailScheduler.class);
     private static final ZoneId ZONE = ZoneId.of("Asia/Seoul");
     private static final DateTimeFormatter TIME_FMT = DateTimeFormatter.ofPattern("HH:mm", Locale.ROOT);
 
@@ -64,7 +61,6 @@ public class JobPostingEmailScheduler {
         if (!properties.isEnabled()) {
             return;
         }
-        System.out.println("daily digest send 시작");
         try {
             notificationService.runDailyDigestSend();
         } catch (Exception e) {
