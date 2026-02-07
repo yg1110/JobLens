@@ -335,22 +335,22 @@ public class ScoringService {
         int score = 0;
         List<String> matched = new ArrayList<>();
 
-        // 우선순위: E-1 > E-2 > E-6 > E-3 > E-4 > E-5
+        // 우선순위: E1 React/Next > E2 Node/Nest > E3 Spring > E4 Java > E5 JSP > E6 PHP
         chosenTrack = chooseStackIfMatch("e1", 15, stack, target, matched, chosenTrack);
         if (chosenTrack == null) {
             chosenTrack = chooseStackIfMatch("e2", 13, stack, target, matched, chosenTrack);
         }
         if (chosenTrack == null) {
-            chosenTrack = chooseStackIfMatch("e6", 11, stack, target, matched, chosenTrack);
+            chosenTrack = chooseStackIfMatch("e3", 11, stack, target, matched, chosenTrack);
         }
         if (chosenTrack == null) {
-            chosenTrack = chooseStackIfMatch("e3", 9, stack, target, matched, chosenTrack);
+            chosenTrack = chooseStackIfMatch("e4", 9, stack, target, matched, chosenTrack);
         }
         if (chosenTrack == null) {
-            chosenTrack = chooseStackIfMatch("e4", 7, stack, target, matched, chosenTrack);
+            chosenTrack = chooseStackIfMatch("e5", 7, stack, target, matched, chosenTrack);
         }
         if (chosenTrack == null) {
-            chosenTrack = chooseStackIfMatch("e5", 5, stack, target, matched, chosenTrack);
+            chosenTrack = chooseStackIfMatch("e6", 5, stack, target, matched, chosenTrack);
         }
 
         if (chosenTrack == null) {
@@ -359,18 +359,18 @@ public class ScoringService {
             score = switch (chosenTrack) {
                 case "e1" -> 15;
                 case "e2" -> 13;
-                case "e6" -> 11;
-                case "e3" -> 9;
-                case "e4" -> 7;
-                case "e5" -> 5;
+                case "e3" -> 11;
+                case "e4" -> 9;
+                case "e5" -> 7;
+                case "e6" -> 5;
                 default -> 0;
             };
         }
 
         boolean jspDegraded = false;
-        if (jspFound && (chosenTrack == null || !"e4".equals(chosenTrack))) {
-            // JSP가 포함되면 강제 E-4로 강등
-            chosenTrack = "e4";
+        if (jspFound && (chosenTrack == null || !"e5".equals(chosenTrack))) {
+            // JSP가 포함되면 강제 E5로 강등
+            chosenTrack = "e5";
             score = 7;
             jspDegraded = true;
             matched.add("jsp");

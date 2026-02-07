@@ -29,28 +29,29 @@
 
 - **HTTP API 래핑(FastAPI)**
   - CLI와 동일한 옵션을 HTTP POST 요청으로 받아 크롤링 실행 (`/crawl`)
+  - 기존 파일과 병합 저장 및 URL 기준 중복 스킵 지원
   - 이미 저장된 JSON 결과를 HTTP GET으로 조회 (`/jobs`)
   - `/docs`(Swagger UI), `/redoc`을 통해 스키마/예제 자동 문서화
 
 ---
 
-## Project Structure (예시)
-
-> 파일명은 설명을 위한 예시입니다. 실제 프로젝트 구조에 맞게 조정하세요.
+## Project Structure
 
 ```
-saramin/
-  __init__.py
-  models.py               # JobPosting, DetailContext
-  http.py                 # make_session, fetch_html, post_form
-  list_urls.py            # build_paged_url
-  list_parser.py          # parse_list_page
-  detail_context.py       # build_detail_context (rec_idx/seq, uuid, nonce)
-  detail_fetcher.py       # fetch_detail_iframe_html (view-ajax → iframe)
-  detail_parser.py        # parse_detail_sections, split_text_by_headings (SECTION_TITLE_MAP)
-  ocr_image_parser.py     # OCR helpers (extract_image_urls, ocr_images_to_text)
-  crawler.py              # crawl_list, enrich_jobs_with_details, save_json
-main.py                   # CLI entry
+crawler/
+  main.py                   # CLI 엔트리포인트
+  api_app.py                # FastAPI HTTP API (uvicorn api_app:app)
+  requirements.txt
+  saramin/
+    models.py               # JobPosting, DetailContext
+    http.py                 # make_session, fetch_html, post_form
+    list_urls.py            # build_paged_url, with_recruit_page_count
+    list_parser.py          # parse_list_page
+    detail_context.py       # build_detail_context (rec_idx/seq, uuid, nonce)
+    detail_fetcher.py       # fetch_detail_iframe_html (view-ajax → iframe)
+    detail_parser.py        # parse_detail_sections, split_text_by_headings (SECTION_TITLE_MAP)
+    ocr_image_parser.py     # extract_image_urls, looks_like_image_only_detail, ocr_images_to_text
+    crawler.py              # crawl_list, enrich_jobs_with_details, load_json, save_json
 ```
 
 ---
@@ -58,14 +59,12 @@ main.py                   # CLI entry
 ## Requirements
 
 - Python 3.10+ 권장
-- 필수
-  - `requests`
-  - `beautifulsoup4`
-  - `lxml`
-- OCR 옵션 사용 시(optional)
-  - `pytesseract`
-  - `pillow`
-  - (시스템) `tesseract-ocr` 바이너리 설치 필요
+- 필수 (pip)
+  - `requests`, `beautifulsoup4`, `lxml`
+  - `pytesseract`, `pillow` (OCR fallback용, 상세 수집 시)
+  - `fastapi`, `uvicorn`, `pydantic` (HTTP API용)
+- OCR 사용 시 시스템 의존성
+  - `tesseract-ocr` 바이너리 설치 필요 (예: `brew install tesseract tesseract-lang`)
 
 ---
 
@@ -84,21 +83,14 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 3) OCR 사용 시(옵션)
+### 3) OCR 사용 시 (tesseract 시스템 설치)
 
-`requirements.txt`에 아래를 포함하세요.
-
-- `pytesseract`
-- `pillow`
-
-그리고 OS에 tesseract 설치가 필요합니다.
+`--detail --ocr` 옵션 사용 시 `tesseract-ocr` 바이너리가 필요합니다.
 
 **macOS (Homebrew)**
 
 ```bash
-brew install tesseract
-# 환경에 따라 언어팩이 별도인 경우
-brew install tesseract-lang
+brew install tesseract tesseract-lang
 ```
 
 ---
@@ -201,12 +193,13 @@ uvicorn api_app:app --reload --port 8000
 
 - `POST /crawl`
   - 본문(`application/json`)으로 크롤링 옵션을 전달하고, 크롤링을 즉시 실행 후 결과를 JSON으로 반환.
+  - 기존 `out` 파일이 있으면 **URL 기준 중복 공고는 스킵**하고, `save_to_file: true`일 때 **기존 결과와 병합 저장**함.
   - 요청 Body 스키마: `CrawlRequest`
   - `recruit_page_count`: 페이지당 목록 개수(recruitPageCount). 1, 10, 20, 30, 40, 50, 80, 100 등. `null`이면 URL에 이미 있는 값 유지.
 
     ```json
     {
-      "url": "https://www.saramin.co.kr/zf_user/jobs/list/job-category...",
+      "url": "https://www.saramin.co.kr/zf_user/search?cat_kewd=...",
       "pages": 1,
       "recruit_page_count": null,
       "list_delay": 1.8,
@@ -216,7 +209,7 @@ uvicorn api_app:app --reload --port 8000
       "save_detail_html": false,
       "ocr": false,
       "ocr_lang": "kor+eng",
-      "ocr_max_images": 3,
+      "ocr_max_images": 5,
       "save_to_file": false,
       "out": "saramin_jobs.json"
     }
@@ -255,7 +248,7 @@ uvicorn api_app:app --reload --port 8000
 - `GET /jobs`
   - 이미 JSON 파일로 저장된 결과를 읽어오는 엔드포인트.
   - 쿼리 파라미터:
-    - `file`: 조회할 JSON 파일 경로 (기본값: `saramin_jobs.json`)
+    - `file`: 조회할 JSON 파일 경로 (기본값: `saramin_jobs.json`, 실행 디렉터리 기준)
   - 응답 Body 스키마: `JobsFileResponse`
 
     ```json

@@ -91,22 +91,22 @@ joblens:
         - "5~15년"
     stack:
       e1:
-        - "Spring Boot"
-        - "Spring WebFlux"
-      e2:
         - "React"
-        - "Vue"
         - "Next.js"
-      e3:
+      e2:
         - "Node.js"
         - "Express"
+        - "Nest"
+      e3:
+        - "Spring Boot"
+        - "Spring WebFlux"
       e4:
-        - "JSP"
-      e5:
-        - "PHP"
-      e6:
         - "Kotlin"
         - "Java"
+      e5:
+        - "JSP"
+      e6:
+        - "PHP"
     jsp:
       - "JSP"
       - "jsp"

@@ -1,188 +1,136 @@
-# JobLens — 채용공고 자동 수집·필터링·의사결정 지원 시스템 (진행중)
+# JobLens — 채용공고 자동 수집·필터링·의사결정 지원 (진행중)
 
-사람인 채용공고를 매일 자동 수집하고, **OCR(이미지 텍스트 포함)** 기반으로 본문을 합성 분석하여  
-**지원 추천 / 보류 / 제외**로 분류 + **설명 가능한 근거(Explainable Logs)** 를 제공하는 개인용 의사결정 지원 시스템입니다.
+사람인 채용공고를 수집하고, **스코어링 엔진**으로 추천/보류/제외를 판단한 뒤 **이메일 알림**을 발송하는 개인용 의사결정 지원 시스템입니다.
 
-> 목표: “하루 15분 안에 지원 의사결정 끝내기”
-
----
-
-## 1. 왜 만들었나 (Problem)
-
-- 사람인/잡코리아 신규 공고가 매일 올라오고, 수동 확인·정리 비용이 큼
-- 공고 상세에 **포스터/캡처 이미지로 된 텍스트**가 자주 포함되어 단순 HTML 파싱만으로는 누락 발생
-- “지원할 공고”를 빠르게 추려야 하는데, **근거 없는 자동화**는 신뢰가 떨어짐  
-  → 그래서 **Explainable(설명 가능)** 을 핵심 요구로 설정
+> 목표: "하루 15분 안에 지원 의사결정 끝내기"
 
 ---
 
-## 2. 목표 (Outcome & KPI)
+## 아키텍처
+
+```
+┌─────────────┐     GET /jobs      ┌─────────────┐
+│   Crawler   │ ─────────────────► │     API     │
+│  (Python)   │   saramin_jobs.json│  (Spring)   │
+│  :8000      │                    │  :8080      │
+└─────────────┘                    └──────┬──────┘
+       │                                  │
+       │ POST /crawl                      │ Scoring
+       │ (옵션: API에서 트리거)            │ → DB 저장
+       │                                  │ → 이메일 발송
+       ▼                                  ▼
+  사람인 사이트                    PostgreSQL + SMTP
+```
+
+- **crawler**: 사람인 목록/상세 수집 → JSON 저장, FastAPI로 `/jobs`·`/crawl` 제공
+- **api**: 크롤러 `GET /jobs` 호출 → 스코어링 → DB upsert / 이메일 알림
+
+---
+
+## 프로젝트 구조
+
+| 디렉터리 | 설명 |
+|----------|------|
+| [`crawler/`](crawler/README.md) | Python 크롤러 (사람인 목록·상세, OCR fallback, FastAPI) |
+| [`api/`](api/README.md) | Spring Boot API (스코어링, bulk 저장, 이메일 스케줄러) |
+
+---
+
+## Quick Start
+
+### 1) Crawler 실행
+
+```bash
+cd crawler
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+# 목록 + 상세 + OCR: python main.py --detail --ocr
+python main.py --detail --out saramin_jobs.json
+# API 서버 (api에서 호출용):
+uvicorn api_app:app --port 8000
+```
+
+### 2) API 실행
+
+```bash
+cd api
+# .env 에 POSTGRES_PASSWORD, SMTP_*, NOTIFICATION_RECIPIENTS 등 설정
+docker-compose up -d   # PostgreSQL
+./gradlew bootRun
+```
+
+### 3) 기본 흐름
+
+- **크롤러**가 `saramin_jobs.json`에 공고 저장
+- **API**가 `GET /jobs`로 공고 조회 → bulk 저장 또는 스코어링
+- **스케줄러**: 매시 fetch → 80점 초과 시 즉시 메일, 매일 09:00 digest
+
+---
+
+## 왜 만들었나 (Problem)
+
+- 사람인 신규 공고가 매일 올라오고, 수동 확인·정리 비용이 큼
+- 공고 상세에 **이미지로 된 텍스트**가 많아 HTML 파싱만으로는 누락 발생 → **OCR fallback** 필요
+- "지원할 공고"를 빠르게 추리기 위해 **설명 가능한(Explainable)** 점수 breakdown 제공
+
+---
+
+## 목표 & 범위
 
 ### Outcome
 
-- 매일 신규 공고(최대 **20건**을 “오늘 검토 대상”으로) 자동 정리
-- 자동 분류: **지원 추천 / 보류 / 제외**
-- 분류 근거(Top 3 사유 + 점수 breakdown)를 사람이 이해 가능한 형태로 제공
-- 최종 결정은 사용자가 UI에서 빠르게 수행: **지원/보류/제외 + 메모**
+- 신규 공고 자동 수집 (목록 + 상세, OCR 포함)
+- 자동 분류: **추천 / 보류 / 제외** + 점수 breakdown (A~H 항목별 사유)
+- 이메일 알림: 80점 초과 즉시, 70점 이상 digest
 
-### KPI
+### 스코어링 (100점)
 
-- 일일 검토 시간: **15분 이내**
-- 불필요 공고 자동 제외율: **80% 이상**
-- 신규 공고 누락률 최소화(플랫폼 구조 변경 대응 포함)
+| 항목 | 최대 | 설명 |
+|------|------|------|
+| A_location | 15 | 근무지 (서울/경기/대전 우선) |
+| B_employment | 15 | 정규직 > 파견/프리랜서 > 전환형인턴 > 인턴 |
+| C_role_fit | 20 | 프론트엔드 > 풀스택 > 백엔드 |
+| D_experience_fit | 10 | 3~6년 > 신입/경력 > 7년↑ |
+| E_stack_fit | 15 | React/Next > Node/Nest > Spring > Java > JSP > PHP |
+| F_domain | 10 | 제품/플랫폼 > 혼합 > 금융SI |
+| G_culture | 10 | 복지/워라밸 키워드 |
+| H_jd_quality | 5 | JD 상세 분량·섹션 수 |
 
----
+**Hard Filter (즉시 제외)**
 
-## 3. 범위 (Scope)
+- 계약직/기간제/계약 사원
+- 비개발 직무 (마케팅, 디자이너, 영업, 기획자, PM 등)
 
-### 대상 플랫폼
-
-- **사람인** (1차)
-
-### 수집 항목
-
-- 회사 정보: 사원수(필수), 매출/손익(가능 범위 내)
-- 공고 정보:
-  - 본문 텍스트(HTML)
-  - 본문 이미지 텍스트(OCR)
-  - 근무지(주소/지역), 시작/마감기간, 스택/기술키워드
-- (가능하면) 면접후기
-
-### 사용자 기능
-
-- 오늘의 신규 공고 확인
-- 필터링/정렬/추천 사유 확인
-- 공고 상태 관리: **지원/보류/제외 + 메모**
+**판정**: 70점↑ 추천 / 50~69 보류 / 50↓ 비추천
 
 ---
 
-## 4. 의사결정 규칙 (Decision Rules)
+## Explainable Logs
 
-### 4.1 Hard Filter (즉시 제외)
-
-- **계약직/기간제/프로젝트 계약** 등: 즉시 제외
-  - 예: `계약직`, `기간제`, `프로젝트 계약`, `계약(개월)`
-  - 예외: “정규직 전환형 인턴”은 Hard Filter 아님(스코어링으로)
-- **비개발 직무** 즉시 제외
-  - 예: `총무`, `경리`, `사무`, `구매`, `생산`, `CS기술`, `필드엔지니어`, `인사`, `온보딩`, `오프보딩`
-- (초기 확정 룰) **파견/상주/주말근무** 감지 시 제외
-- **사원수 < 20** 제외
-  - 단, 미확인(unknown)은 Hard Filter 미적용 → 보류로 처리
-
-> Hard Filter는 “절대 지원 안 하는 것만” 최소한으로 유지하는 것을 원칙으로 함.
-
----
-
-### 4.2 Score (100점) — v1.2
-
-- A 지역: 15
-- B 고용형태: 15 (계약직은 HF에서 컷)
-- C 포지션 적합도(트랙): 20
-- D 경력 매칭(3~6년): 10
-- E 기술스택 시너지: 15
-- F 제품성/도메인: 10
-- G 근무조건/문화: 10
-- H JD 품질: 5
-
-#### 최종 라벨
-
-- **추천**: 70점 이상
-- **보류**: 50~69점
-- **비추천**: 그 외
-- **제외**: Hard Filter 해당
-
-## 5. 트랙 판정 & 스택 시너지 (핵심 로직)
-
-### C. 포지션 적합도(20점)
-
-트랙 판정 우선순위:
-
-1. 프론트(React/TS 중심)
-2. 풀스택(React + Node/Nest 또는 Spring + API/DB)
-3. 백엔드(API/Python)
-4. 기타(네이티브/C++/Qt 등)
-
-점수 범위:
-
-- 트랙1 프론트 강매치: 16~20
-- 트랙2 풀스택 강매치: 14~19
-- 트랙3 백엔드 강매치: 10~17
-- 트랙4 기타: 0~8
-
----
-
-### D. 경력 매칭(10점) — 타깃 3~6년
-
-- `경력 3년↑`: 10
-- `경력 4~6년`: 10
-- `경력 2~5년`: 9
-- `경력무관/신입·경력`: 7
-- `신입`: 3~5
-- `경력 7년↑`: 3
-- `경력 8년↑ / 10년↑ / 5~15년`: 0~2
-
----
-
-### E. 기술스택 시너지(15점)
-
-**E 트랙은 1개만 적용** (우선순위 적용)
-
-1. E-1 React/TS/Next + Node/Nest (13~15)
-2. E-2 React/TS + 실시간/시각화 + Spring + DB (11~14)
-3. E-6 Java/SpringBoot + DB (7~12) ※ JSP 강제 문구 없을 때만
-4. E-3 Python/DB/플랫폼 (8~12)
-5. E-4 레거시/JSP 강제 (0~6)
-6. E-5 C++/Qt (0~5)
-
-## 6. 데이터 파이프라인 (Data Flow)
-
-1. 리스트 수집
-
-- 검색 조건 기반으로 공고 URL + 식별자 수집
-- 1일 최대 수집량 100건 제한(초과 시 이월/우선순위 컷)
-
-2. 상세 수집
-
-- HTML 텍스트 추출
-- 본문 이미지 URL 수집(포스터/캡처 등)
-- 마감일/근무지/요건/근무형태 등 구조화
-
-3. OCR 추출
-
-- 이미지 다운로드 → 전처리(OpenCV) → OCR → 후처리(노이즈 제거)
-- HTML 텍스트 + OCR 텍스트 결합 → `merged_text` 생성
-
-4. 정규화/변경 감지
-
-- PK: `platform + platform_posting_id`
-- `merged_text` 해시로 변경 감지(변경 시 재분석)
-
-5. 스코어링 & 분류
-
-- Hard Filter → 제외 처리
-- Score 100점 계산 → 추천/보류/비추천 라벨
-
-## 7. Explainable Logs (신뢰의 핵심)
-
-모든 공고는 “왜 추천/제외 되었는지”가 한 번에 보이도록 결과 JSON에 breakdown 로그를 남깁니다.
+스코어링 결과에 breakdown과 flags가 포함됩니다.
 
 ```json
 {
   "decision": "추천",
-  "total_score": 78,
+  "totalScore": 78,
+  "excluded": false,
   "breakdown": {
-    "A_location": { "score": 15, "reason": "서울" },
+    "A_location": { "score": 15, "reason": "서울/경기/대전 근무지" },
     "B_employment": { "score": 15, "reason": "정규직" },
-    "C_role_fit": { "score": 18, "reason": "React 기반 웹서비스/실시간 UI" },
-    "D_experience_fit": { "score": 9, "reason": "신입·경력(범위 넓음)" },
-    "E_stack_fit": {
-      "score": 14,
-      "reason": "React + 실시간(WebSocket) + DB + (Spring/Node 일부)"
-    },
-    "F_domain": { "score": 7, "reason": "의료 도메인/제품성" },
-    "G_culture": { "score": 8, "reason": "가정의날/휴가/복지 명확" },
-    "H_jd_quality": { "score": 5, "reason": "JD 구체적" }
+    "C_role_fit": { "score": 20, "reason": "프론트엔드 중심 포지션" },
+    "D_experience_fit": { "score": 10, "reason": "타깃 3~6년 경력" },
+    "E_stack_fit": { "score": 13, "reason": "스택 트랙: E2" },
+    "F_domain": { "score": 7, "reason": "제품 + SI/금융 등 혼합 도메인" },
+    "G_culture": { "score": 6, "reason": "복지/워라밸 신호 3개 이상" },
+    "H_jd_quality": { "score": 2, "reason": "JD 정보가 보통 수준" }
   },
-  "flags": ["멀티포지션 공고: 웹서비스 개발자 트랙 선택"]
+  "flags": []
 }
 ```
+
+---
+
+## 상세 문서
+
+- [crawler/README.md](crawler/README.md) — 크롤러 CLI·API, OCR, 구조
+- [api/README.md](api/README.md) — API 엔드포인트, 환경변수, 스케줄러
