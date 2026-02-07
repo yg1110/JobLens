@@ -31,7 +31,7 @@ public class JobPostingController {
      */
     @PostMapping("/bulk")
     public ResponseEntity<JobPostingService.SaveResult> bulkUpsert(
-            @RequestParam(required = false) String file
+            @RequestParam(value = "file", defaultValue = "saramin_jobs.json") String file
     ) {
         List<JobPostingRequest> jobs = crawlerClient.fetchJobs(file);
         JobPostingService.SaveResult result = service.upsertAll(jobs);
@@ -47,7 +47,7 @@ public class JobPostingController {
      */
     @PostMapping("/score")
     public ResponseEntity<List<ScoreResponse>> score(
-            @RequestParam(required = false) String file
+            @RequestParam(value = "file", defaultValue = "saramin_jobs.json") String file
     ) {
         List<JobPostingRequest> jobs = crawlerClient.fetchJobs(file);
         List<ScoreResponse> responses = jobs.stream()
