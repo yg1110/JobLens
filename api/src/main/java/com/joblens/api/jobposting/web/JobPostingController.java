@@ -30,10 +30,8 @@ public class JobPostingController {
      * 그 결과를 DB에 저장한다.
      */
     @PostMapping("/bulk")
-    public ResponseEntity<JobPostingService.SaveResult> bulkUpsert(
-            @RequestParam(value = "file", defaultValue = "saramin_jobs.json") String file
-    ) {
-        List<JobPostingRequest> jobs = crawlerClient.fetchJobs(file);
+    public ResponseEntity<JobPostingService.SaveResult> bulkUpsert() {
+        List<JobPostingRequest> jobs = crawlerClient.fetchJobs();
         JobPostingService.SaveResult result = service.upsertAll(jobs);
         return ResponseEntity.ok(result);
     }
@@ -46,10 +44,8 @@ public class JobPostingController {
      * - file 파라미터가 없으면: 크롤러 기본(최근) 결과에 대해 점수화
      */
     @PostMapping("/score")
-    public ResponseEntity<List<ScoreResponse>> score(
-            @RequestParam(value = "file", defaultValue = "saramin_jobs.json") String file
-    ) {
-        List<JobPostingRequest> jobs = crawlerClient.fetchJobs(file);
+    public ResponseEntity<List<ScoreResponse>> score() {
+        List<JobPostingRequest> jobs = crawlerClient.fetchJobs();
         List<ScoreResponse> responses = jobs.stream()
                 .map(scoringService::score)
                 .toList();

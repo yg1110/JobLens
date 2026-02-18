@@ -55,20 +55,13 @@ class CrawlRequest(BaseModel):
         ge=0.0,
         description="상세 요청 간 딜레이(초)",
     )
-    save_detail_html: bool = Field(
-        False,
-        description="상세 원문 HTML을 결과에 포함할지 여부(파일/응답 크기 증가)",
-    )
 
     # OCR 관련 옵션
     ocr: bool = Field(
         False,
         description="이미지 기반 상세에 대해 OCR fallback 활성화 여부",
     )
-    ocr_lang: str = Field(
-        "kor+eng",
-        description="Tesseract OCR 언어 설정",
-    )
+
     ocr_max_images: int = Field(
         5,
         ge=1,
@@ -80,12 +73,6 @@ class CrawlRequest(BaseModel):
         False,
         description="크롤링 결과를 로컬 JSON 파일로도 저장할지 여부",
     )
-    out: str = Field(
-        "saramin_jobs.json",
-        description="파일 저장 시 사용할 파일명",
-    )
-
-
 class DetailSections(BaseModel):
     """
     상세 섹션 구조.
@@ -219,7 +206,7 @@ class JobsFileResponse(BaseModel):
         json_schema_extra={
             "example": {
                 "count": 2,
-                "file_path": "jobs.json",
+                "file_path": "saramin_jobs.json",
                 "jobs": [
                     JobPostingResponse.model_config["json_schema_extra"]["example"]
                 ],
@@ -265,7 +252,7 @@ def run_crawl(req: CrawlRequest) -> CrawlResponse:
       4) 결과를 바로 JSON 으로 반환
     """
     # 0) 기존 저장 파일에서 이미 수집된 공고 URL 로드 (중복 스킵용)
-    existing_jobs = load_json(req.out)
+    existing_jobs = load_json("saramin_jobs.json")
     existing_urls = {j.get("url") for j in existing_jobs if j.get("url")}
 
     # 1) 목록 수집 (recruitPageCount 지정 시 URL에 반영)
@@ -278,7 +265,7 @@ def run_crawl(req: CrawlRequest) -> CrawlResponse:
         delay=req.list_delay,
     )
 
-    # 1-1) 이미 saramin_jobs.json(또는 req.out)에 있는 공고는 스킵
+    # 1-1) 이미 saramin_jobs.json에 있는 공고는 스킵
     jobs = [j for j in jobs if j.url not in existing_urls]
 
     # 2) 상세 수집(옵션)
@@ -287,11 +274,9 @@ def run_crawl(req: CrawlRequest) -> CrawlResponse:
             jobs,
             list_referer=list_url,
             delay=req.detail_delay,
-            save_detail_html=req.save_detail_html,
             limit=req.detail_limit,
             debug=False,  # API 에서는 기본적으로 조용하게 동작
             ocr=req.ocr,
-            ocr_lang=req.ocr_lang,
             ocr_max_images=req.ocr_max_images,
         )
 
@@ -304,10 +289,10 @@ def run_crawl(req: CrawlRequest) -> CrawlResponse:
 
         new_dicts = [asdict(j) for j in jobs]
         all_dicts = existing_jobs + new_dicts
-        with open(req.out, "w", encoding="utf-8") as f:
+        with open("saramin_jobs.json", "w", encoding="utf-8") as f:
             json.dump(all_dicts, f, ensure_ascii=False, indent=2)
         saved_to_file = True
-        file_path = req.out
+        file_path = "saramin_jobs.json"
 
     # 4) 응답 변환
     jobs_resp = [JobPostingResponse.from_dataclass(j) for j in jobs]
@@ -326,19 +311,11 @@ def run_crawl(req: CrawlRequest) -> CrawlResponse:
     tags=["crawl"],
     summary="이미 크롤링된 JSON 파일에서 공고 목록 조회",
 )
-def get_jobs(
-    file: str = Query(
-        "saramin_jobs.json",
-        description="조회할 JSON 파일 경로(기본: saramin_jobs.json)",
-    ),
-) -> JobsFileResponse:
+def get_jobs() -> JobsFileResponse:
     """
     로컬에 저장된 크롤링 결과 JSON 파일을 읽어 공고 목록을 반환한다.
-
-    - 기본 파일명은 `saramin_jobs.json`
-    - 저장 위치를 바꾼 경우 `?file=경로` 로 지정
     """
-    path = Path(file)
+    path = Path("saramin_jobs.json")
     if not path.is_file():
         raise HTTPException(status_code=404, detail=f"file not found: {path}")
 
@@ -347,11 +324,17 @@ def get_jobs(
     with path.open("r", encoding="utf-8") as f:
         data = json.load(f)
 
-    # data는 JobPosting dict 리스트라고 가정
-    if not isinstance(data, list):
-        raise HTTPException(status_code=500, detail="invalid jobs json format")
+    # 저장 형식: 루트가 리스트이거나, { "jobs": [...] } 래퍼 객체
+    if isinstance(data, list):
+        raw_jobs = data
+    elif isinstance(data, dict) and "jobs" in data:
+        raw_jobs = data["jobs"]
+        if not isinstance(raw_jobs, list):
+            raise HTTPException(status_code=500, detail="invalid jobs json format: 'jobs' is not a list")
+    else:
+        raise HTTPException(status_code=500, detail="invalid jobs json format: expected list or object with 'jobs' key")
 
-    jobs = [JobPostingResponse(**item) for item in data]
+    jobs = [JobPostingResponse(**item) for item in raw_jobs]
 
     return JobsFileResponse(count=len(jobs), file_path=str(path), jobs=jobs)
 

@@ -2,11 +2,10 @@ package com.joblens.api.jobposting.notification;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,7 +30,6 @@ import jakarta.mail.MessagingException;
 @Service
 public class JobPostingNotificationService {
 
-    private static final Logger log = LoggerFactory.getLogger(JobPostingNotificationService.class);
     /** 스코어 결과 '추천' 판정 시에만 알림 대상으로 처리 */
     private static final String DECISION_RECOMMEND = "추천";
 
@@ -62,12 +60,10 @@ public class JobPostingNotificationService {
             System.out.println("알림 비활성화 또는 수신자 없음, 스킵");
             return;
         }
-        String file = properties.getCrawlerFile();
         List<JobPostingRequest> jobs;
         try {
-            jobs = crawlerClient.fetchJobs(file);
+            jobs = crawlerClient.fetchJobs();
         } catch (Exception e) {
-            System.out.println("크롤러 fetch 실패: " + e.getMessage());
             return;
         }
         int thresholdImmediate = properties.getThreshold().getImmediate();
@@ -144,6 +140,8 @@ public class JobPostingNotificationService {
             return;
         }
         try {
+            eligible.sort(Comparator.comparing(JobPostingNotification::getTotalScoreSnapshot,
+                    Comparator.nullsLast(Comparator.reverseOrder())));
             sendDigestEmail(eligible);
             Instant now = Instant.now();
             for (JobPostingNotification n : eligible) {

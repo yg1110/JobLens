@@ -71,11 +71,9 @@ def enrich_jobs_with_details(
     *,
     list_referer: str,
     delay: float = 1.2,
-    save_detail_html: bool = False,
     limit: Optional[int] = None,
     debug: bool = False,
     ocr: bool = True,
-    ocr_lang: str = "kor+eng",
     ocr_max_images: int = 5,
 ) -> List[JobPosting]:
     """
@@ -90,11 +88,9 @@ def enrich_jobs_with_details(
 
     파라미터:
     - list_referer: 상세 접근 시 서버가 요구하는 referer(목록 페이지 URL 등)
-    - save_detail_html: 디버깅/보관 목적(detail_html 원문 저장)
     - limit: 상위 N개까지만 상세 enrich 수행 (나머지는 그대로 out에 담아 반환)
     - debug: 진행 중 로그 출력
     - ocr: OCR fallback 사용 여부
-    - ocr_lang: tesseract 언어(예: kor+eng)
     - ocr_max_images: OCR에 사용할 이미지 최대 개수(비용/시간 제한)
     """
     session = make_session()
@@ -149,7 +145,7 @@ def enrich_jobs_with_details(
                     session,
                     img_urls,
                     referer=job.url,
-                    lang=ocr_lang,
+                    lang="kor+eng",
                     max_images=ocr_max_images,
                 )
 
@@ -173,10 +169,6 @@ def enrich_jobs_with_details(
 
             # 최종 섹션 결과 저장
             job.detail_sections = sections
-
-            # 필요 시 raw detail_html 저장(추후 재파싱/디버깅용)
-            if save_detail_html:
-                job.detail_html = detail_html
 
             # 디버그 로그
             if debug:

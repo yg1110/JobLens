@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.Collections;
 import java.util.List;
@@ -34,10 +33,8 @@ public class CrawlerClient {
      * @param file 조회할 JSON 파일명 (기본값 사용 시 null)
      * @return 공고 목록
      */
-    public List<JobPostingRequest> fetchJobs(String file) {
-        String url = file != null && !file.isBlank()
-                ? UriComponentsBuilder.fromPath("/jobs").queryParam("file", file).toUriString()
-                : "/jobs";
+    public List<JobPostingRequest> fetchJobs() {
+        String url = "/jobs";
 
         try {
             JobsFileResponse response = restClient.get()

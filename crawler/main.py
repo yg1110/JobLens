@@ -124,11 +124,9 @@ def main(argv=None):
             # 상세 요청 시 Referer로 목록 URL을 넘겨주는 목적(차단/검증 대응)
             list_referer=args.url,
             delay=args.detail_delay,
-            save_detail_html=args.save_detail_html,
             limit=args.detail_limit,
             debug=args.debug,
             ocr=args.ocr,
-            ocr_lang=args.ocr_lang,
             ocr_max_images=args.ocr_max_images,
         )
 
