@@ -11,7 +11,19 @@ from saramin.crawler import crawl_list, enrich_jobs_with_details, load_json
 from saramin.list_urls import with_recruit_page_count
 from saramin.models import JobPosting
 
-from main import DEFAULT_URL
+# API 기본 요청값(초기값)
+DEFAULT_CRAWL_REQUEST = {
+    "url": "https://www.saramin.co.kr/zf_user/jobs/list/job-category?cat_kewd=86%2C87%2C92%2C84&loc_mcd=101000%2C102000%2C108000&keydownAccess=&panel_type=&search_optional_item=n&search_done=y&panel_count=y&preview=y&page=1&page_count=20&sort=RD",
+    "pages": 1,
+    "recruit_page_count": 20,
+    "list_delay": 1.8,
+    "detail": True,
+    "detail_limit": 20,
+    "detail_delay": 1.2,
+    "ocr": True,
+    "ocr_max_images": 3,
+    "save_to_file": True,
+}
 
 
 class CrawlRequest(BaseModel):
@@ -22,55 +34,55 @@ class CrawlRequest(BaseModel):
     """
 
     url: str = Field(
-        DEFAULT_URL,
+        DEFAULT_CRAWL_REQUEST["url"],
         description="사람인 검색 URL(필터 포함). 생략 시 기본 필터 URL 사용",
     )
     pages: int = Field(
-        1,
+        DEFAULT_CRAWL_REQUEST["pages"],
         ge=1,
         description="목록(list) 페이지를 최대 몇 페이지까지 크롤링할지",
     )
     recruit_page_count: Optional[int] = Field(
-        None,
+        DEFAULT_CRAWL_REQUEST["recruit_page_count"],
         ge=1,
         description="페이지당 목록 개수(recruitPageCount). 1, 10, 20, 30, 40, 50, 80, 100 등. 미지정 시 URL 기존값 유지",
     )
     list_delay: float = Field(
-        1.8,
+        DEFAULT_CRAWL_REQUEST["list_delay"],
         ge=0.0,
         description="목록 요청 간 기본 딜레이(초)",
     )
     # 상세(detail) 관련 옵션
     detail: bool = Field(
-        False,
+        DEFAULT_CRAWL_REQUEST["detail"],
         description="상세(view-ajax → iframe)까지 크롤링할지 여부",
     )
     detail_limit: Optional[int] = Field(
-        None,
+        DEFAULT_CRAWL_REQUEST["detail_limit"],
         ge=0,
         description="상세 크롤링 개수 제한(미지정 시 전체)",
     )
     detail_delay: float = Field(
-        1.2,
+        DEFAULT_CRAWL_REQUEST["detail_delay"],
         ge=0.0,
         description="상세 요청 간 딜레이(초)",
     )
 
     # OCR 관련 옵션
     ocr: bool = Field(
-        False,
+        DEFAULT_CRAWL_REQUEST["ocr"],
         description="이미지 기반 상세에 대해 OCR fallback 활성화 여부",
     )
 
     ocr_max_images: int = Field(
-        5,
+        DEFAULT_CRAWL_REQUEST["ocr_max_images"],
         ge=1,
         description="OCR 시 사용할 최대 이미지 개수",
     )
 
     # 파일 저장 관련(옵션)
     save_to_file: bool = Field(
-        False,
+        DEFAULT_CRAWL_REQUEST["save_to_file"],
         description="크롤링 결과를 로컬 JSON 파일로도 저장할지 여부",
     )
 class DetailSections(BaseModel):

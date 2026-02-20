@@ -7,12 +7,21 @@ import java.util.Map;
 
 public class ScoreResponse {
 
+    private String title;
     private String decision;
     private boolean excluded;
     private int totalScore;
     private ScoreBreakdown breakdown;
     private Map<String, List<String>> matchedKeywords = new HashMap<>();
     private List<ScoreFlag> flags = new ArrayList<>();
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
 
     public String getDecision() {
         return decision;
