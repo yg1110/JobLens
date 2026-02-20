@@ -24,8 +24,8 @@ import jakarta.mail.MessagingException;
 /**
  * 채용 공고 알림 비즈니스 로직.
  * <ul>
- *   <li>매시간: 크롤러 fetch → 스코어 → 추천만 저장/갱신 → 80점 초과 시 즉시 메일 1회</li>
- *   <li>매일 09:00: digest 대상(즉시 미발송, 70점 이상) 1통 발송 후 digest_sent_at 갱신</li>
+ *   <li>매시간: 크롤러 fetch → 스코어 → 추천만 저장/갱신 → 100점 이상 시 즉시 메일 1회</li>
+ *   <li>매일 09:00: digest 대상(즉시 미발송, 60점 이상) 1통 발송 후 digest_sent_at 갱신</li>
  * </ul>
  * 실제 스케줄 호출은 {@link com.joblens.api.jobposting.scheduler.JobPostingEmailScheduler}에서 수행.
  */
@@ -55,7 +55,7 @@ public class JobPostingNotificationService {
     }
 
     /**
-     * 매시간: fetch → 스코어 → 추천만 저장/갱신 → 80점 초과 건을 모아 즉시 메일 1통 발송
+     * 매시간: fetch → 스코어 → 추천만 저장/갱신 → 100점 이상 건을 모아 즉시 메일 1통 발송
      */
     @Transactional
     public void runHourlyFetchAndImmediateSend() {
@@ -106,17 +106,21 @@ public class JobPostingNotificationService {
             notification.setTotalScoreSnapshot(totalScore);
             notification.setTitle(job.getTitle());
             notification.setCompany(job.getCompany());
+            notification.setMatchedStackSnapshot(
+                    response.getMatchedStackKeywords() != null && !response.getMatchedStackKeywords().isEmpty()
+                            ? String.join(", ", response.getMatchedStackKeywords())
+                            : null);
             notificationRepository.save(notification);
 
-            // 즉시 발송 대상 수집: 임계값 초과이고 아직 즉시 발송 안 한 건만 (중복 방지용 row lock)
-            if (totalScore > thresholdImmediate) {
+            // 즉시 발송 대상 수집: 임계값 이상이고 아직 즉시 발송 안 한 건만 (중복 방지용 row lock)
+            if (totalScore >= thresholdImmediate) {
                 Optional<JobPostingNotification> locked = notificationRepository.findByPostingIdForUpdate(postingId);
                 if (locked.isPresent() && locked.get().getImmediateSentAt() == null) {
                     immediateCandidates.add(new ImmediateCandidate(job, response, locked.get()));
                 }
             }
         }
-        log.info("[Notification] 스코어링 완료 - 전체 {}건, 추천 {}건, 즉시발송대상(임계값>{}점) {}건",
+        log.info("[Notification] 스코어링 완료 - 전체 {}건, 추천 {}건, 즉시발송대상(임계값>={}점) {}건",
                 jobs.size(), recommendCount, thresholdImmediate, immediateCandidates.size());
 
         // 수집한 즉시 추천 건을 한 통으로 발송 후 발송 시각 갱신
@@ -204,6 +208,9 @@ public class JobPostingNotificationService {
             sb.append("<strong>").append(escapeHtml(job.getCompany())).append("</strong> - ").append(escapeHtml(job.getTitle()));
             sb.append(" | 위치: ").append(escapeHtml(job.getLocation()));
             sb.append(" | 점수: ").append(response.getTotalScore()).append("점");
+            if (response.getMatchedStackKeywords() != null && !response.getMatchedStackKeywords().isEmpty()) {
+                sb.append(" | 스택: ").append(escapeHtml(String.join(", ", response.getMatchedStackKeywords())));
+            }
             if (job.getUrl() != null) {
                 sb.append(" <a href=\"").append(escapeHtml(job.getUrl())).append("\">공고 보기</a>");
             }
@@ -222,8 +229,11 @@ public class JobPostingNotificationService {
         for (JobPostingNotification n : list) {
             sb.append("<li>");
             sb.append(escapeHtml(n.getCompany())).append(" - ").append(escapeHtml(n.getTitle()));
-            sb.append(" (").append(n.getTotalScoreSnapshot()).append("점) ");
-            sb.append("<a href=\"").append(escapeHtml(n.getPostingId())).append("\">공고 보기</a>");
+            sb.append(" (").append(n.getTotalScoreSnapshot()).append("점)");
+            if (n.getMatchedStackSnapshot() != null && !n.getMatchedStackSnapshot().isBlank()) {
+                sb.append(" | 스택: ").append(escapeHtml(n.getMatchedStackSnapshot()));
+            }
+            sb.append(" <a href=\"").append(escapeHtml(n.getPostingId())).append("\">공고 보기</a>");
             sb.append("</li>");
         }
         sb.append("</ul></body></html>");

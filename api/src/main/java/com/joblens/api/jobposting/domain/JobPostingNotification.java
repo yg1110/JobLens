@@ -36,6 +36,10 @@ public class JobPostingNotification {
     @Column(name = "total_score_snapshot")
     private Integer totalScoreSnapshot;
 
+    /** 매칭된 스택 키워드 스냅샷 (쉼표 구분, 메일 본문 표시용) */
+    @Column(name = "matched_stack_snapshot", length = 500)
+    private String matchedStackSnapshot;
+
     protected JobPostingNotification() {
     }
 
@@ -101,5 +105,13 @@ public class JobPostingNotification {
 
     public void setTotalScoreSnapshot(Integer totalScoreSnapshot) {
         this.totalScoreSnapshot = totalScoreSnapshot;
+    }
+
+    public String getMatchedStackSnapshot() {
+        return matchedStackSnapshot;
+    }
+
+    public void setMatchedStackSnapshot(String matchedStackSnapshot) {
+        this.matchedStackSnapshot = matchedStackSnapshot;
     }
 }

@@ -62,13 +62,6 @@ public class ScoringService {
         StackScoreResult stackScoreResult = scoreStack(text, matchedKeywords);
         breakdown.seteStackFit(stackScoreResult.component());
         response.setMatchedStackKeywords(stackScoreResult.matchedStackKeywords());
-        if (stackScoreResult.jspDegraded()) {
-            flags.add(new ScoreFlag(
-                    "JSP_DOWNGRADE",
-                    "JSP 요구사항으로 인한 스택 강등",
-                    ScoreFlag.Severity.INFO
-            ));
-        }
 
         ScoreComponent fDomain = scoreDomain(text, matchedKeywords);
         breakdown.setfDomain(fDomain);
@@ -319,8 +312,6 @@ public class ScoringService {
         Map<String, List<String>> stack = keywords.getStack();
         String target = text.toLowerCase(Locale.ROOT);
 
-        boolean jspFound = !findMatched(keywords.getJsp(), target).isEmpty();
-
         String chosenTrack = null;
         int score = 0;
         List<String> matched = new ArrayList<>();
@@ -333,28 +324,16 @@ public class ScoringService {
             }
         }
 
-        boolean jspDegraded = false;
-        if (jspFound && (chosenTrack == null || !"e5".equals(chosenTrack))) {
-            chosenTrack = "e5";
-            score = 20;
-            jspDegraded = true;
-            matched.add("jsp");
-        }
-
         if (!matched.isEmpty()) {
             matchedKeywords.put("E_stack_fit", matched);
         }
 
-        String reason;
-        if (chosenTrack == null) {
-            reason = "핵심 기술 스택 불명확";
-        } else {
-            reason = "스택 트랙: " + chosenTrack.toUpperCase(Locale.ROOT)
-                    + (jspDegraded ? " (JSP 요구로 인한 강등)" : "");
-        }
+        String reason = chosenTrack == null
+                ? "핵심 기술 스택 불명확"
+                : "스택 트랙: " + chosenTrack.toUpperCase(Locale.ROOT);
 
         ScoreComponent component = new ScoreComponent("E", "stack_fit", score, MAX_STACK_FIT, reason);
-        return new StackScoreResult(component, jspDegraded, List.copyOf(matched));
+        return new StackScoreResult(component, false, List.copyOf(matched));
     }
 
     private String chooseStackIfMatch(

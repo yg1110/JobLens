@@ -142,14 +142,14 @@ joblens:
         - "SpringBoot"
         - "Spring WebFlux"
         - "Spring Framework"
-        - "Java"
-      e4:
-        - "Kotlin"
-        - "Go"
-        - "Golang"
         - "Python"
         - "Django"
         - "FastAPI"
+      e4:
+        - "Java"
+        - "Kotlin"
+        - "Go"
+        - "Golang"
       e5:
         - "JSP"
         - "jsp"
@@ -186,8 +186,8 @@ joblens:
   notification:
     enabled: ${NOTIFICATION_ENABLED:true}
     threshold:
-      immediate: 80 # 이 점수 초과 시 즉시 메일
-      digest: 70 # 이 점수 이상 시 digest 포함
+      immediate: 100 # 이 점수 이상이면 즉시 메일
+      digest: 60 # 이 점수 이상이면 digest 포함
     quietHours:
       start: "22:00"
       end: "08:00"

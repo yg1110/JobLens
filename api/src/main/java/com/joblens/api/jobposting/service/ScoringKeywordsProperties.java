@@ -17,7 +17,6 @@ public class ScoringKeywordsProperties {
     private Map<String, List<String>> employment = new HashMap<>();
     private Map<String, List<String>> experience = new HashMap<>();
     private Map<String, List<String>> stack = new HashMap<>();
-    private List<String> jsp = new ArrayList<>();
     private Map<String, List<String>> domain = new HashMap<>();
     private List<String> culturePositive = new ArrayList<>();
 
@@ -59,14 +58,6 @@ public class ScoringKeywordsProperties {
 
     public void setStack(Map<String, List<String>> stack) {
         this.stack = stack;
-    }
-
-    public List<String> getJsp() {
-        return jsp;
-    }
-
-    public void setJsp(List<String> jsp) {
-        this.jsp = jsp;
     }
 
     public Map<String, List<String>> getDomain() {
