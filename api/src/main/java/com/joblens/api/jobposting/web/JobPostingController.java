@@ -3,6 +3,8 @@ package com.joblens.api.jobposting.web;
 import com.joblens.api.jobposting.client.CrawlerClient;
 import com.joblens.api.jobposting.service.JobPostingService;
 import com.joblens.api.jobposting.service.ScoringService;
+import com.joblens.api.jobposting.web.dto.CrawlRequest;
+import com.joblens.api.jobposting.web.dto.CrawlResponse;
 import com.joblens.api.jobposting.web.dto.JobPostingRequest;
 import com.joblens.api.jobposting.web.dto.ScoreResponse;
 
@@ -10,6 +12,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
 @RestController
 @RequestMapping("/api/job-postings")
@@ -37,11 +41,7 @@ public class JobPostingController {
     }
 
     /**
-     * Python 크롤러 GET /jobs 를 먼저 호출하여 JSON을 받고,
-     * 그 결과에 대해 Scoring Engine을 적용한다.
-     *
-     * - file 파라미터가 있으면: 해당 파일의 공고 목록에 대해 점수화
-     * - file 파라미터가 없으면: 크롤러 기본(최근) 결과에 대해 점수화
+     * Python 크롤러 GET /jobs 로 조회한 공고 목록에 대해 Scoring Engine을 적용한다.
      */
     @PostMapping("/score")
     public ResponseEntity<List<ScoreResponse>> score() {
@@ -50,5 +50,14 @@ public class JobPostingController {
                 .map(scoringService::score)
                 .toList();
         return ResponseEntity.ok(responses);
+    }
+
+    /**
+     * Python 크롤러 POST /crawl 을 호출하여 사람인 목록/상세 크롤링을 실행한다.
+     */
+    @PostMapping("/crawl")
+    public ResponseEntity<CrawlResponse> crawl(@RequestBody CrawlRequest request) {
+        CrawlResponse response = crawlerClient.crawl(request);
+        return ResponseEntity.ok(response);
     }
 }

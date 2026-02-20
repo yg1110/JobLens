@@ -46,6 +46,7 @@ dependencies {
 	implementation 'net.javacrumbs.shedlock:shedlock-core:5.14.0'
 	implementation 'net.javacrumbs.shedlock:shedlock-spring:5.14.0'
 	implementation 'net.javacrumbs.shedlock:shedlock-provider-jdbc-template:5.14.0'
+	implementation 'org.apache.httpcomponents.client5:httpclient5'
 }
 
 tasks.named('test') {
