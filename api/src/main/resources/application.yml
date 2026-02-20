@@ -41,15 +41,6 @@ joblens:
         - "계약 사원"
         - "계약직 (정규전환)"
         - "기간제 근로자"
-      nonDevRoles:
-        - "마케팅"
-        - "디자이너"
-        - "영업"
-        - "기획자"
-        - "PM"
-        - "운영 매니저"
-        - "QA"
-        - "테스트 엔지니어"
     # 역할 우선순위: fullstack > frontend > app > backend
     role:
       fullstack:

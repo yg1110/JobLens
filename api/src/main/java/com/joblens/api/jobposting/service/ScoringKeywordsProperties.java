@@ -87,7 +87,6 @@ public class ScoringKeywordsProperties {
 
     public static class HardFilter {
         private List<String> contract = new ArrayList<>();
-        private List<String> nonDevRoles = new ArrayList<>();
 
         public List<String> getContract() {
             return contract;
@@ -95,14 +94,6 @@ public class ScoringKeywordsProperties {
 
         public void setContract(List<String> contract) {
             this.contract = contract;
-        }
-
-        public List<String> getNonDevRoles() {
-            return nonDevRoles;
-        }
-
-        public void setNonDevRoles(List<String> nonDevRoles) {
-            this.nonDevRoles = nonDevRoles;
         }
     }
 }

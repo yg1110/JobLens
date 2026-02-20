@@ -200,7 +200,6 @@ curl -X POST "http://localhost:8080/api/emails/test" \
 **Hard Filter** (적용 시 즉시 제외, 0점):
 
 - 계약직/기간제/계약 사원
-- 비개발 직무 (마케팅, 디자이너, 영업, 기획자, PM 등)
 
 **판정**
 

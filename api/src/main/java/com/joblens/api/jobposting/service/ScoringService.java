@@ -5,8 +5,6 @@ import com.joblens.api.jobposting.web.dto.ScoreBreakdown;
 import com.joblens.api.jobposting.web.dto.ScoreComponent;
 import com.joblens.api.jobposting.web.dto.ScoreFlag;
 import com.joblens.api.jobposting.web.dto.ScoreResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -14,7 +12,6 @@ import java.util.*;
 @Service
 public class ScoringService {
 
-    private static final Logger log = LoggerFactory.getLogger(ScoringService.class);
     private static final int MAX_LOCATION = 15;
     private static final int MAX_EMPLOYMENT = 15;
     private static final int MAX_ROLE_FIT = 20;
@@ -32,6 +29,7 @@ public class ScoringService {
 
     public ScoreResponse score(JobPostingRequest request) {
         ScoreResponse response = new ScoreResponse();
+        response.setTitle(request.getTitle());
         ScoreBreakdown breakdown = new ScoreBreakdown();
         response.setBreakdown(breakdown);
 
@@ -40,9 +38,8 @@ public class ScoringService {
 
         String text = buildSearchText(request);
 
-        // Hard filter 먼저 적용
-        if (isContractPosition(request, text, matchedKeywords, flags)
-                || isNonDevRole(request, text, matchedKeywords, flags)) {
+        // Hard filter 먼저 적용 (HF-1 계약직만)
+        if (isContractPosition(request, text, matchedKeywords, flags)) {
             response.setExcluded(true);
             response.setDecision("제외");
             response.setTotalScore(0);
@@ -135,28 +132,6 @@ public class ScoringService {
             flags.add(new ScoreFlag(
                     "CONTRACT",
                     "계약직/기간제 조건으로 제외",
-                    ScoreFlag.Severity.CRITICAL
-            ));
-            return true;
-        }
-        return false;
-    }
-
-    private boolean isNonDevRole(
-            JobPostingRequest request,
-            String text,
-            Map<String, List<String>> matchedKeywords,
-            List<ScoreFlag> flags
-    ) {
-        List<String> nonDevKeywords = keywords.getHardFilter().getNonDevRoles();
-        String target = ((request.getTitle() == null ? "" : request.getTitle()) + " " + text)
-                .toLowerCase(Locale.ROOT);
-        List<String> matched = findMatched(nonDevKeywords, target);
-        if (!matched.isEmpty()) {
-            matchedKeywords.put("hardFilter_nonDev", matched);
-            flags.add(new ScoreFlag(
-                    "NON_DEV_ROLE",
-                    "비개발 직무로 판단되어 제외",
                     ScoreFlag.Severity.CRITICAL
             ));
             return true;
