@@ -24,8 +24,8 @@ import jakarta.mail.MessagingException;
 /**
  * 채용 공고 알림 비즈니스 로직.
  * <ul>
- *   <li>매시간: 크롤러 fetch → 스코어 → 추천만 저장/갱신 → 100점 이상 시 즉시 메일 1회</li>
- *   <li>매일 09:00: digest 대상(즉시 미발송, 60점 이상) 1통 발송 후 digest_sent_at 갱신</li>
+ *   <li>매시간: 크롤러 fetch → 스코어 → 추천만 저장/갱신 → 80점 이상 시 즉시 메일 1회</li>
+ *   <li>매일 09:00: 추천 메일(digest) 대상(즉시 미발송, 70점 이상) 1통 발송 후 digest_sent_at 갱신</li>
  * </ul>
  * 실제 스케줄 호출은 {@link com.joblens.api.jobposting.scheduler.JobPostingEmailScheduler}에서 수행.
  */
@@ -55,7 +55,7 @@ public class JobPostingNotificationService {
     }
 
     /**
-     * 매시간: fetch → 스코어 → 추천만 저장/갱신 → 100점 이상 건을 모아 즉시 메일 1통 발송
+     * 매시간: fetch → 스코어 → 추천만 저장/갱신 → 80점 이상 건을 모아 즉시 메일 1통 발송
      */
     @Transactional
     public void runHourlyFetchAndImmediateSend() {
@@ -145,7 +145,7 @@ public class JobPostingNotificationService {
     private record ImmediateCandidate(JobPostingRequest job, ScoreResponse response, JobPostingNotification notification) {}
 
     /**
-     * 매일 09:00: 크롤링/스코어 반영 후 digest 대상(즉시 미발송, digest 미포함, 70점 이상) 1통 발송 후 digest_sent_at 갱신
+     * 매일 09:00: 크롤링/스코어 반영 후 추천 메일(digest) 대상(즉시 미발송, digest 미포함, 70점 이상) 1통 발송 후 digest_sent_at 갱신
      */
     @Transactional
     public void runDailyDigestSend() {

@@ -12,12 +12,14 @@ import java.util.*;
 @Service
 public class ScoringService {
 
-    private static final int MAX_LOCATION = 15;
+    /** A_location: 서울/경기/인천 10점 */
+    private static final int MAX_LOCATION = 10;
     private static final int MAX_EMPLOYMENT = 15;
-    private static final int MAX_ROLE_FIT = 20;
+    /** C_role_fit: 풀스택 > 프론트 > 백엔드, 만점 30 */
+    private static final int MAX_ROLE_FIT = 30;
     private static final int MAX_EXPERIENCE_FIT = 10;
-    /** 스택 점수만으로 총점 산출, 만점 100 */
-    private static final int MAX_STACK_FIT = 100;
+    /** E_stack_fit: 스택 트랙 동일 로직, 만점 60 */
+    private static final int MAX_STACK_FIT = 60;
     private static final int MAX_DOMAIN = 10;
     private static final int MAX_CULTURE = 10;
     private static final int MAX_JD_QUALITY = 5;
@@ -72,8 +74,8 @@ public class ScoringService {
         ScoreComponent hJdQuality = scoreJdQuality(request, matchedKeywords);
         breakdown.sethJdQuality(hJdQuality);
 
-        // 총점: E_stack_fit만 사용 (만점 100)
-        int total = stackScoreResult.component().getScore();
+        // 총점: A_location(10) + C_role_fit(30) + E_stack_fit(60) = 100
+        int total = aLocation.getScore() + cRoleFit.getScore() + stackScoreResult.component().getScore();
         response.setTotalScore(total);
         response.setExcluded(false);
         String decision = decide(total);
@@ -134,11 +136,11 @@ public class ScoringService {
         String reason;
 
         if (normalized.contains("서울") || normalized.contains("경기") || normalized.contains("인천")) {
-            score = 15;
+            score = 10;
             reason = "서울/경기/인천 근무지";
             matchedKeywords.put("A_location", List.of(location));
         } else if (!normalized.isEmpty()) {
-            score = 10;
+            score = 0;
             reason = "기타 국내 근무지";
             matchedKeywords.put("A_location", List.of(location));
         } else {
@@ -210,11 +212,11 @@ public class ScoringService {
         String reason = "역할 적합도 낮음";
         List<String> matched = new ArrayList<>();
 
-        // fullstack > frontend > app > backend 우선순위
+        // 풀스택(30) > 프론트(20) > 백엔드(10) 우선순위
         if (role.containsKey("fullstack")) {
             List<String> hits = findMatched(role.get("fullstack"), target);
             if (!hits.isEmpty()) {
-                score = 20;
+                score = 30;
                 reason = "풀스택 포지션";
                 matched.addAll(hits);
             }
@@ -222,7 +224,7 @@ public class ScoringService {
         if (score == 0 && role.containsKey("frontend")) {
             List<String> hits = findMatched(role.get("frontend"), target);
             if (!hits.isEmpty()) {
-                score = 17;
+                score = 20;
                 reason = "프론트엔드 포지션";
                 matched.addAll(hits);
             }
@@ -230,7 +232,7 @@ public class ScoringService {
         if (score == 0 && role.containsKey("app")) {
             List<String> hits = findMatched(role.get("app"), target);
             if (!hits.isEmpty()) {
-                score = 14;
+                score = 15;
                 reason = "앱 개발 포지션";
                 matched.addAll(hits);
             }
@@ -238,7 +240,7 @@ public class ScoringService {
         if (score == 0 && role.containsKey("backend")) {
             List<String> hits = findMatched(role.get("backend"), target);
             if (!hits.isEmpty()) {
-                score = 11;
+                score = 10;
                 reason = "백엔드 포지션";
                 matched.addAll(hits);
             }
@@ -299,13 +301,13 @@ public class ScoringService {
         return new ScoreComponent("D", "experience_fit", score, MAX_EXPERIENCE_FIT, reason);
     }
 
-    /** 스택 트랙 순서(우선순위) 및 만점 100 기준 점수. e1=최상 > e5=최하 */
+    /** 스택 트랙 순서(우선순위) 및 만점 60 기준 점수. e1=최상 > e5=최하 */
     private static final List<StackTier> STACK_TIERS = List.of(
-            new StackTier("e1", 100),
-            new StackTier("e2", 80),
-            new StackTier("e3", 60),
-            new StackTier("e4", 40),
-            new StackTier("e5", 20)
+            new StackTier("e1", 60),
+            new StackTier("e2", 48),
+            new StackTier("e3", 36),
+            new StackTier("e4", 24),
+            new StackTier("e5", 12)
     );
 
     private StackScoreResult scoreStack(String text, Map<String, List<String>> matchedKeywords) {

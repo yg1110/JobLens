@@ -99,12 +99,12 @@ public class NotificationProperties {
         this.crawlerFile = crawlerFile;
     }
 
-    /** 점수 임계값: immediate=즉시 메일, digest=일일 digest 포함 */
+    /** 점수 임계값: immediate=즉시 메일, digest=추천(일일) 메일 포함 */
     public static class Threshold {
-        /** 이 점수 이상이면 즉시 메일 1회 발송 (기본 100) */
-        private int immediate = 100;
-        /** 이 점수 이상이면 digest 대상 (기본 60) */
-        private int digest = 60;
+        /** 이 점수 이상이면 즉시 메일 1회 발송 (기본 80) */
+        private int immediate = 80;
+        /** 이 점수 이상이면 추천(digest) 메일 대상 (기본 70) */
+        private int digest = 70;
 
         public int getImmediate() {
             return immediate;

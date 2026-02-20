@@ -186,8 +186,8 @@ joblens:
   notification:
     enabled: ${NOTIFICATION_ENABLED:true}
     threshold:
-      immediate: 100 # 이 점수 이상이면 즉시 메일
-      digest: 60 # 이 점수 이상이면 digest 포함
+      immediate: 80 # 이 점수 이상이면 즉시 메일
+      digest: 70 # 이 점수 이상이면 추천(digest) 메일 포함
     quietHours:
       start: "22:00"
       end: "08:00"
