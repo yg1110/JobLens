@@ -4,7 +4,6 @@ import com.joblens.api.jobposting.web.dto.CrawlRequest;
 import com.joblens.api.jobposting.web.dto.CrawlResponse;
 import com.joblens.api.jobposting.web.dto.JobsFileResponse;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.joblens.api.jobposting.web.dto.JobPostingRequest;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -32,14 +31,11 @@ public class CrawlerClient {
 
     private final String baseUrl;
     private final RestClient restClient;
-    private final ObjectMapper objectMapper;
 
     public CrawlerClient(
-            @Value("${joblens.crawler.base-url:http://localhost:8000}") String baseUrl,
-            ObjectMapper objectMapper
+            @Value("${joblens.crawler.base-url:http://localhost:8000}") String baseUrl
     ) {
         this.baseUrl = baseUrl;
-        this.objectMapper = objectMapper;
         this.restClient = RestClient.builder()
             .baseUrl(baseUrl)
             .requestFactory(new HttpComponentsClientHttpRequestFactory())
@@ -83,8 +79,7 @@ public class CrawlerClient {
     public CrawlResponse crawl(CrawlRequest request) {
         String url = "/crawl";
         try {
-            String requestJson = objectMapper.writeValueAsString(request);
-            log.info("[CrawlerClient] 크롤 요청 POST {}{} body={}", baseUrl, url, requestJson);
+            log.info("[CrawlerClient] 크롤 요청 POST {}{} body={}", baseUrl, url);
         } catch (Exception e) {
             log.info("[CrawlerClient] 크롤 요청 POST {}{} (request 직렬화 생략)", baseUrl, url);
         }

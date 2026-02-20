@@ -200,6 +200,7 @@ public class ScoringService {
         String reason = "고용 형태 정보 미약";
         List<String> matched = new ArrayList<>();
 
+        // 무조건 정규직만 만점, 그 외는 0점
         if (employment.containsKey("fulltime")) {
             List<String> hits = findMatched(employment.get("fulltime"), target);
             if (!hits.isEmpty()) {
@@ -208,28 +209,27 @@ public class ScoringService {
                 matched.addAll(hits);
             }
         }
-        if (score == 0 && employment.containsKey("dispatch")) {
-            List<String> hits = findMatched(employment.get("dispatch"), target);
-            if (!hits.isEmpty()) {
-                score = 12;
-                reason = "파견/프리랜서";
-                matched.addAll(hits);
+        if (score == 0) {
+            if (employment.containsKey("dispatch")) {
+                List<String> hits = findMatched(employment.get("dispatch"), target);
+                if (!hits.isEmpty()) {
+                    reason = "파견/프리랜서 (정규직 아님)";
+                    matched.addAll(hits);
+                }
             }
-        }
-        if (score == 0 && employment.containsKey("conversionIntern")) {
-            List<String> hits = findMatched(employment.get("conversionIntern"), target);
-            if (!hits.isEmpty()) {
-                score = 8;
-                reason = "전환형 인턴";
-                matched.addAll(hits);
+            if (employment.containsKey("conversionIntern")) {
+                List<String> hits = findMatched(employment.get("conversionIntern"), target);
+                if (!hits.isEmpty()) {
+                    reason = reason.isEmpty() ? "전환형 인턴 (정규직 아님)" : reason;
+                    matched.addAll(hits);
+                }
             }
-        }
-        if (score == 0 && employment.containsKey("intern")) {
-            List<String> hits = findMatched(employment.get("intern"), target);
-            if (!hits.isEmpty()) {
-                score = 3;
-                reason = "인턴";
-                matched.addAll(hits);
+            if (employment.containsKey("intern")) {
+                List<String> hits = findMatched(employment.get("intern"), target);
+                if (!hits.isEmpty()) {
+                    reason = reason.isEmpty() ? "인턴 (정규직 아님)" : reason;
+                    matched.addAll(hits);
+                }
             }
         }
 
@@ -248,27 +248,35 @@ public class ScoringService {
         String reason = "역할 적합도 낮음";
         List<String> matched = new ArrayList<>();
 
-        // 프론트엔드 > 풀스택 > 백엔드 우선순위
-        if (role.containsKey("frontend")) {
-            List<String> hits = findMatched(role.get("frontend"), target);
+        // fullstack > frontend > app > backend 우선순위
+        if (role.containsKey("fullstack")) {
+            List<String> hits = findMatched(role.get("fullstack"), target);
             if (!hits.isEmpty()) {
                 score = 20;
-                reason = "프론트엔드 중심 포지션";
+                reason = "풀스택 포지션";
                 matched.addAll(hits);
             }
         }
-        if (score == 0 && role.containsKey("fullstack")) {
-            List<String> hits = findMatched(role.get("fullstack"), target);
+        if (score == 0 && role.containsKey("frontend")) {
+            List<String> hits = findMatched(role.get("frontend"), target);
             if (!hits.isEmpty()) {
                 score = 17;
-                reason = "풀스택 포지션";
+                reason = "프론트엔드 포지션";
+                matched.addAll(hits);
+            }
+        }
+        if (score == 0 && role.containsKey("app")) {
+            List<String> hits = findMatched(role.get("app"), target);
+            if (!hits.isEmpty()) {
+                score = 14;
+                reason = "앱 개발 포지션";
                 matched.addAll(hits);
             }
         }
         if (score == 0 && role.containsKey("backend")) {
             List<String> hits = findMatched(role.get("backend"), target);
             if (!hits.isEmpty()) {
-                score = 14;
+                score = 11;
                 reason = "백엔드 포지션";
                 matched.addAll(hits);
             }
@@ -339,22 +347,13 @@ public class ScoringService {
         int score = 0;
         List<String> matched = new ArrayList<>();
 
-        // 우선순위: E1 React/Next > E2 Node/Nest > E3 Spring > E4 Java > E5 JSP > E6 PHP
+        // 1순위 React/Next/Nest/Node/Express > 2순위 Spring/Java > 3순위 그 외
         chosenTrack = chooseStackIfMatch("e1", 15, stack, target, matched, chosenTrack);
         if (chosenTrack == null) {
-            chosenTrack = chooseStackIfMatch("e2", 13, stack, target, matched, chosenTrack);
+            chosenTrack = chooseStackIfMatch("e2", 11, stack, target, matched, chosenTrack);
         }
         if (chosenTrack == null) {
-            chosenTrack = chooseStackIfMatch("e3", 11, stack, target, matched, chosenTrack);
-        }
-        if (chosenTrack == null) {
-            chosenTrack = chooseStackIfMatch("e4", 9, stack, target, matched, chosenTrack);
-        }
-        if (chosenTrack == null) {
-            chosenTrack = chooseStackIfMatch("e5", 7, stack, target, matched, chosenTrack);
-        }
-        if (chosenTrack == null) {
-            chosenTrack = chooseStackIfMatch("e6", 5, stack, target, matched, chosenTrack);
+            chosenTrack = chooseStackIfMatch("e3", 7, stack, target, matched, chosenTrack);
         }
 
         if (chosenTrack == null) {
@@ -362,19 +361,16 @@ public class ScoringService {
         } else {
             score = switch (chosenTrack) {
                 case "e1" -> 15;
-                case "e2" -> 13;
-                case "e3" -> 11;
-                case "e4" -> 9;
-                case "e5" -> 7;
-                case "e6" -> 5;
+                case "e2" -> 11;
+                case "e3" -> 7;
                 default -> 0;
             };
         }
 
         boolean jspDegraded = false;
-        if (jspFound && (chosenTrack == null || !"e5".equals(chosenTrack))) {
-            // JSP가 포함되면 강제 E5로 강등
-            chosenTrack = "e5";
+        if (jspFound && (chosenTrack == null || !"e3".equals(chosenTrack))) {
+            // JSP 포함 시 3순위(e3)로 강등
+            chosenTrack = "e3";
             score = 7;
             jspDegraded = true;
             matched.add("jsp");

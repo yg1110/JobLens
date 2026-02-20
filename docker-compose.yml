@@ -26,6 +26,12 @@ services:
     container_name: joblens-crawler
     ports:
       - "8000:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\" || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     # 크롤 결과 JSON은 컨테이너 내 /app 에 저장됨. 영속화 시 예: volumes: - ./crawler/output:/app
 
   api:
@@ -37,7 +43,7 @@ services:
       postgres:
         condition: service_healthy
       crawler:
-        condition: service_started
+        condition: service_healthy
     environment:
       POSTGRES_DB: jdbc:postgresql://postgres:5432/${DB_NAME:-joblens}
       POSTGRES_USER: ${DB_USERNAME:-joblens}
