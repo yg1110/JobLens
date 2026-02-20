@@ -192,5 +192,6 @@ joblens:
       start: "22:00"
       end: "08:00"
     digestTime: "09:00"
-    recipients: ["younggil9488@gmail.com"] # 수신자. NOTIFICATION_RECIPIENTS=a@b.com,b@c.com 또는 yaml에 리스트로 설정
+    recipients:
+      - "younggil9488@gmail.com"
     crawlerFile: "saramin_jobs.json"
