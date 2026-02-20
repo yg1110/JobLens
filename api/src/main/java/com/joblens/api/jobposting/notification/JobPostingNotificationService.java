@@ -6,6 +6,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +32,7 @@ import jakarta.mail.MessagingException;
 @Service
 public class JobPostingNotificationService {
 
+    private static final Logger log = LoggerFactory.getLogger(JobPostingNotificationService.class);
     /** 스코어 결과 '추천' 판정 시에만 알림 대상으로 처리 */
     private static final String DECISION_RECOMMEND = "추천";
 
@@ -56,28 +59,36 @@ public class JobPostingNotificationService {
      */
     @Transactional
     public void runHourlyFetchAndImmediateSend() {
+        log.info("[Notification] 매시간 fetch·즉시발송 작업 시작");
         if (!properties.isEnabled() || properties.getRecipients().isEmpty()) {
-            System.out.println("알림 비활성화 또는 수신자 없음, 스킵");
+            log.info("[Notification] 스킵 - 알림 비활성화 또는 수신자 없음 (enabled={}, recipients={})",
+                    properties.isEnabled(), properties.getRecipients().size());
             return;
         }
         List<JobPostingRequest> jobs;
         try {
             jobs = crawlerClient.fetchJobs();
         } catch (Exception e) {
+            log.warn("[Notification] 크롤러 fetch 실패, 스킵: {}", e.getMessage());
             return;
         }
+        log.info("[Notification] 크롤러 fetch 완료 - 공고 수={}", jobs.size());
+
         int thresholdImmediate = properties.getThreshold().getImmediate();
         List<ImmediateCandidate> immediateCandidates = new ArrayList<>();
+        int recommendCount = 0;
         for (JobPostingRequest job : jobs) {
             ScoreResponse response = scoringService.score(job);
             if (!DECISION_RECOMMEND.equals(response.getDecision())) {
                 continue;
             }
+            recommendCount++;
+            int totalScore = response.getTotalScore();
+
             String postingId = job.getUrl();
             if (postingId == null || postingId.isBlank()) {
                 continue;
             }
-            int totalScore = response.getTotalScore();
 
             // 없으면 새로 생성, 있으면 조회 후 아래에서 갱신
             JobPostingNotification notification = notificationRepository.findByPostingId(postingId)
@@ -105,6 +116,9 @@ public class JobPostingNotificationService {
                 }
             }
         }
+        log.info("[Notification] 스코어링 완료 - 전체 {}건, 추천 {}건, 즉시발송대상(임계값>{}점) {}건",
+                jobs.size(), recommendCount, thresholdImmediate, immediateCandidates.size());
+
         // 수집한 즉시 추천 건을 한 통으로 발송 후 발송 시각 갱신
         if (!immediateCandidates.isEmpty()) {
             try {
@@ -114,9 +128,12 @@ public class JobPostingNotificationService {
                     c.notification().setImmediateSentAt(now);
                     notificationRepository.save(c.notification());
                 }
+                log.info("[Notification] 즉시 추천 이메일 발송 완료 - {}건, 수신자 {}명", immediateCandidates.size(), properties.getRecipients().size());
             } catch (Exception e) {
-                System.out.println("즉시 메일 발송 실패: " + e.getMessage());
+                log.error("[Notification] 즉시 메일 발송 실패: {}", e.getMessage(), e);
             }
+        } else {
+            log.info("[Notification] 즉시 발송 대상 없음, 이메일 미발송");
         }
     }
 
@@ -128,15 +145,18 @@ public class JobPostingNotificationService {
      */
     @Transactional
     public void runDailyDigestSend() {
+        log.info("[Notification] daily digest 작업 시작");
         if (!properties.isEnabled() || properties.getRecipients().isEmpty()) {
-            System.out.println("알림 비활성화 또는 수신자 없음, 스킵");
+            log.info("[Notification] 스킵 - 알림 비활성화 또는 수신자 없음");
             return;
         }
         // digest 보내기 전에 최신 크롤링 데이터 fetch → 스코어 → DB 반영 (추천만 저장)
         runHourlyFetchAndImmediateSend();
         int minScore = properties.getThreshold().getDigest();
         List<JobPostingNotification> eligible = notificationRepository.findEligibleForDigest(minScore);
+        log.info("[Notification] digest 대상 조회 완료 - 최소점수 {}점 이상, 대상 {}건", minScore, eligible.size());
         if (eligible.isEmpty()) {
+            log.info("[Notification] digest 대상 없음, 이메일 미발송");
             return;
         }
         try {
@@ -148,8 +168,9 @@ public class JobPostingNotificationService {
                 n.setDigestSentAt(now);
                 notificationRepository.save(n);
             }
+            log.info("[Notification] digest 이메일 발송 완료 - {}건, 수신자 {}명", eligible.size(), properties.getRecipients().size());
         } catch (Exception e) {
-            System.out.println("digest 메일 발송 실패: " + e.getMessage());
+            log.error("[Notification] digest 메일 발송 실패: {}", e.getMessage(), e);
             // 실패 시 digest_sent_at 미갱신 → 다음 digest 시 다시 대상에 포함
         }
     }
@@ -157,6 +178,7 @@ public class JobPostingNotificationService {
     /** 즉시 추천 공고 여러 건을 한 통으로 발송 */
     private void sendBatchedImmediateEmail(List<ImmediateCandidate> candidates) throws MessagingException {
         String subject = "[JobLens 즉시 추천] " + candidates.size() + "건의 추천 공고";
+        log.info("[Notification] 즉시 추천 이메일 발송 - subject={}, 수신자 {}명", subject, properties.getRecipients().size());
         String html = buildBatchedImmediateHtml(candidates);
         emailService.sendHtmlEmailToMany(properties.getRecipients(), subject, html);
     }
@@ -164,6 +186,7 @@ public class JobPostingNotificationService {
     /** digest 메일 1통 발송 (대상 공고 목록을 HTML로 구성) */
     private void sendDigestEmail(List<JobPostingNotification> list) throws MessagingException {
         String subject = "[JobLens] 오늘의 채용 공고 Digest (" + list.size() + "건)";
+        log.info("[Notification] digest 이메일 발송 - subject={}, 수신자 {}명", subject, properties.getRecipients().size());
         String html = buildDigestHtml(list);
         emailService.sendHtmlEmailToMany(properties.getRecipients(), subject, html);
     }

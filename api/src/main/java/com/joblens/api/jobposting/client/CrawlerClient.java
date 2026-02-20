@@ -4,8 +4,7 @@ import com.joblens.api.jobposting.web.dto.CrawlRequest;
 import com.joblens.api.jobposting.web.dto.CrawlResponse;
 import com.joblens.api.jobposting.web.dto.JobsFileResponse;
 
-import tools.jackson.databind.ObjectMapper;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.joblens.api.jobposting.web.dto.JobPostingRequest;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -33,12 +32,14 @@ public class CrawlerClient {
 
     private final String baseUrl;
     private final RestClient restClient;
+    private final ObjectMapper objectMapper;
 
     public CrawlerClient(
             @Value("${joblens.crawler.base-url:http://localhost:8000}") String baseUrl,
             ObjectMapper objectMapper
     ) {
         this.baseUrl = baseUrl;
+        this.objectMapper = objectMapper;
         this.restClient = RestClient.builder()
             .baseUrl(baseUrl)
             .requestFactory(new HttpComponentsClientHttpRequestFactory())
@@ -53,6 +54,7 @@ public class CrawlerClient {
      */
     public List<JobPostingRequest> fetchJobs() {
         String url = "/jobs";
+        log.info("[CrawlerClient] 공고 목록 조회 요청 GET {}{}", baseUrl, url);
 
         try {
             JobsFileResponse response = restClient.get()
@@ -60,10 +62,14 @@ public class CrawlerClient {
                     .retrieve()
                     .body(JobsFileResponse.class);
 
-            return response != null && response.getJobs() != null
+            int count = response != null ? response.getCount() : 0;
+            List<JobPostingRequest> jobs = response != null && response.getJobs() != null
                     ? response.getJobs()
                     : Collections.emptyList();
+            log.info("[CrawlerClient] 공고 목록 조회 완료 count={}", count);
+            return jobs;
         } catch (RestClientException e) {
+            log.error("[CrawlerClient] 공고 목록 조회 실패: {}", e.getMessage());
             throw new CrawlerClientException("크롤러 /jobs 호출 실패: " + e.getMessage(), e);
         }
     }
@@ -76,11 +82,14 @@ public class CrawlerClient {
      */
     public CrawlResponse crawl(CrawlRequest request) {
         String url = "/crawl";
+        try {
+            String requestJson = objectMapper.writeValueAsString(request);
+            log.info("[CrawlerClient] 크롤 요청 POST {}{} body={}", baseUrl, url, requestJson);
+        } catch (Exception e) {
+            log.info("[CrawlerClient] 크롤 요청 POST {}{} (request 직렬화 생략)", baseUrl, url);
+        }
 
         try {
-            log.info("[CrawlerClient] POST {}{}", baseUrl, url);
-            log.info("[CrawlerClient] request is null? {}", request == null);
-
             CrawlResponse response = restClient.post()
                 .uri(url)
                 .accept(MediaType.APPLICATION_JSON)
@@ -88,9 +97,13 @@ public class CrawlerClient {
                 .body(request)
                 .retrieve()
                 .body(CrawlResponse.class);
-            return response != null ? response : new CrawlResponse();
+            CrawlResponse result = response != null ? response : new CrawlResponse();
+            int count = result.getCount();
+            log.info("[CrawlerClient] 크롤 완료 count={}", count);
+            return result;
         } catch (RestClientResponseException e) {
             String responseBody = e.getResponseBodyAsString();
+            log.error("[CrawlerClient] 크롤 실패: {} body={}", e.getMessage(), responseBody);
             throw new RuntimeException("FastAPI error: " + e.getMessage() + " body=" + responseBody, e);
         }
     }

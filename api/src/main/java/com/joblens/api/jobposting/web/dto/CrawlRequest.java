@@ -18,19 +18,22 @@ import io.swagger.v3.oas.annotations.media.Schema;
     example = """
     {
       "url": "https://www.saramin.co.kr/zf_user/search?cat_kewd=87%2C88%2C92%2C84&company_cd=0%2C1%2C2%2C3%2C4%2C5%2C6%2C7%2C9%2C10&panel_type=&search_optional_item=y&search_done=y&panel_count=y&preview=y&recruitPage=3&recruitSort=relation&recruitPageCount=1&inner_com_type=&searchword=&show_applied=&quick_apply=&except_read=&ai_head_hunting=&mainSearch=n",
-      "pages": 3,
+      "pages": 2,
       "recruit_page_count": 10,
       "list_delay": 1.8,
       "detail": true,
-      "detail_limit": 30,
+      "detail_limit": 20,
       "detail_delay": 1.2,
       "ocr": true,
       "ocr_max_images": 3,
-      "save_to_file": false
+      "save_to_file": true
     }
     """
 )
 public class CrawlRequest {
+
+    /** 매시간 스케줄 크롤링용 기본 사람인 검색 URL */
+    private static final String DEFAULT_URL = "https://www.saramin.co.kr/zf_user/search?cat_kewd=87%2C88%2C92%2C84&company_cd=0%2C1%2C2%2C3%2C4%2C5%2C6%2C7%2C9%2C10&panel_type=&search_optional_item=y&search_done=y&panel_count=y&preview=y&recruitPage=3&recruitSort=relation&recruitPageCount=1&inner_com_type=&searchword=&show_applied=&quick_apply=&except_read=&ai_head_hunting=&mainSearch=n";
 
     @Schema(description = "사람인 검색 URL(필터 포함). 미지정 시 크롤러 기본 URL 사용")
     private String url;
@@ -105,4 +108,23 @@ public class CrawlRequest {
 
     public Boolean getSaveToFile() { return saveToFile; }
     public void setSaveToFile(Boolean saveToFile) { this.saveToFile = saveToFile; }
+
+    /**
+     * 매시간 55분 스케줄 크롤링에 사용하는 기본 요청.
+     * (url, pages=2, recruit_page_count=10, list_delay=1.8, detail=true, detail_limit=20, detail_delay=1.2, ocr=true, ocr_max_images=3, save_to_file=true)
+     */
+    public static CrawlRequest defaultForHourly() {
+        CrawlRequest r = new CrawlRequest();
+        r.setUrl(DEFAULT_URL);
+        r.setPages(2);
+        r.setRecruitPageCount(10);
+        r.setListDelay(1.8);
+        r.setDetail(true);
+        r.setDetailLimit(20);
+        r.setDetailDelay(1.2);
+        r.setOcr(true);
+        r.setOcrMaxImages(3);
+        r.setSaveToFile(true);
+        return r;
+    }
 }

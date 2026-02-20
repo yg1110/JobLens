@@ -5,6 +5,8 @@ import com.joblens.api.jobposting.web.dto.ScoreBreakdown;
 import com.joblens.api.jobposting.web.dto.ScoreComponent;
 import com.joblens.api.jobposting.web.dto.ScoreFlag;
 import com.joblens.api.jobposting.web.dto.ScoreResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -12,6 +14,7 @@ import java.util.*;
 @Service
 public class ScoringService {
 
+    private static final Logger log = LoggerFactory.getLogger(ScoringService.class);
     private static final int MAX_LOCATION = 15;
     private static final int MAX_EMPLOYMENT = 15;
     private static final int MAX_ROLE_FIT = 20;
@@ -89,7 +92,8 @@ public class ScoringService {
 
         response.setTotalScore(total);
         response.setExcluded(false);
-        response.setDecision(decide(total));
+        String decision = decide(total);
+        response.setDecision(decision);
         return response;
     }
 
