@@ -1,10 +1,14 @@
 package com.joblens.api.jobposting.web.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 public class ScoreComponent {
 
     private String code;
     private String name;
+    @JsonIgnore
     private int score;
+    @JsonIgnore
     private int maxScore;
     private String reason;
 
@@ -35,6 +39,7 @@ public class ScoreComponent {
         this.name = name;
     }
 
+    @JsonIgnore
     public int getScore() {
         return score;
     }
@@ -43,6 +48,7 @@ public class ScoreComponent {
         this.score = score;
     }
 
+    @JsonIgnore
     public int getMaxScore() {
         return maxScore;
     }

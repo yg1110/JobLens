@@ -8,6 +8,7 @@ import com.joblens.api.jobposting.web.dto.CrawlResponse;
 import com.joblens.api.jobposting.web.dto.JobPostingRequest;
 import com.joblens.api.jobposting.web.dto.ScoreResponse;
 
+import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -42,7 +43,12 @@ public class JobPostingController {
 
     /**
      * Python 크롤러 GET /jobs 로 조회한 공고 목록에 대해 Scoring Engine을 적용한다.
+     * 총점(100점)은 E_stack_fit(기술 스택)만으로 산출한다.
      */
+    @Operation(
+            summary = "공고 목록 스코어링",
+            description = "크롤러 GET /jobs 결과에 스코어 적용. 총점은 기술 스택(E_stack_fit)만 사용, 만점 100."
+    )
     @PostMapping("/score")
     public ResponseEntity<List<ScoreResponse>> score() {
         List<JobPostingRequest> jobs = crawlerClient.fetchJobs();

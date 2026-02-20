@@ -16,7 +16,8 @@ public class ScoringService {
     private static final int MAX_EMPLOYMENT = 15;
     private static final int MAX_ROLE_FIT = 20;
     private static final int MAX_EXPERIENCE_FIT = 10;
-    private static final int MAX_STACK_FIT = 15;
+    /** 스택 점수만으로 총점 산출, 만점 100 */
+    private static final int MAX_STACK_FIT = 100;
     private static final int MAX_DOMAIN = 10;
     private static final int MAX_CULTURE = 10;
     private static final int MAX_JD_QUALITY = 5;
@@ -46,27 +47,21 @@ public class ScoringService {
             return response;
         }
 
-        int total = 0;
-
         ScoreComponent aLocation = scoreLocation(request, matchedKeywords);
         breakdown.setaLocation(aLocation);
-        total += aLocation.getScore();
 
         ScoreComponent bEmployment = scoreEmployment(request, text, matchedKeywords);
         breakdown.setbEmployment(bEmployment);
-        total += bEmployment.getScore();
 
         ScoreComponent cRoleFit = scoreRoleFit(text, matchedKeywords);
         breakdown.setcRoleFit(cRoleFit);
-        total += cRoleFit.getScore();
 
         ScoreComponent dExperienceFit = scoreExperience(text, matchedKeywords);
         breakdown.setdExperienceFit(dExperienceFit);
-        total += dExperienceFit.getScore();
 
         StackScoreResult stackScoreResult = scoreStack(text, matchedKeywords);
         breakdown.seteStackFit(stackScoreResult.component());
-        total += stackScoreResult.component().getScore();
+        response.setMatchedStackKeywords(stackScoreResult.matchedStackKeywords());
         if (stackScoreResult.jspDegraded()) {
             flags.add(new ScoreFlag(
                     "JSP_DOWNGRADE",
@@ -77,16 +72,15 @@ public class ScoringService {
 
         ScoreComponent fDomain = scoreDomain(text, matchedKeywords);
         breakdown.setfDomain(fDomain);
-        total += fDomain.getScore();
 
         ScoreComponent gCulture = scoreCulture(text, matchedKeywords);
         breakdown.setgCulture(gCulture);
-        total += gCulture.getScore();
 
         ScoreComponent hJdQuality = scoreJdQuality(request, matchedKeywords);
         breakdown.sethJdQuality(hJdQuality);
-        total += hJdQuality.getScore();
 
+        // 총점: E_stack_fit만 사용 (만점 100)
+        int total = stackScoreResult.component().getScore();
         response.setTotalScore(total);
         response.setExcluded(false);
         String decision = decide(total);
@@ -146,9 +140,9 @@ public class ScoringService {
         int score;
         String reason;
 
-        if (normalized.contains("서울") || normalized.contains("경기") || normalized.contains("대전")) {
+        if (normalized.contains("서울") || normalized.contains("경기") || normalized.contains("인천")) {
             score = 15;
-            reason = "서울/경기/대전 근무지";
+            reason = "서울/경기/인천 근무지";
             matchedKeywords.put("A_location", List.of(location));
         } else if (!normalized.isEmpty()) {
             score = 10;
@@ -312,6 +306,15 @@ public class ScoringService {
         return new ScoreComponent("D", "experience_fit", score, MAX_EXPERIENCE_FIT, reason);
     }
 
+    /** 스택 트랙 순서(우선순위) 및 만점 100 기준 점수. e1=최상 > e5=최하 */
+    private static final List<StackTier> STACK_TIERS = List.of(
+            new StackTier("e1", 100),
+            new StackTier("e2", 80),
+            new StackTier("e3", 60),
+            new StackTier("e4", 40),
+            new StackTier("e5", 20)
+    );
+
     private StackScoreResult scoreStack(String text, Map<String, List<String>> matchedKeywords) {
         Map<String, List<String>> stack = keywords.getStack();
         String target = text.toLowerCase(Locale.ROOT);
@@ -322,31 +325,18 @@ public class ScoringService {
         int score = 0;
         List<String> matched = new ArrayList<>();
 
-        // 1순위 React/Next/Nest/Node/Express > 2순위 Spring/Java > 3순위 그 외
-        chosenTrack = chooseStackIfMatch("e1", 15, stack, target, matched, chosenTrack);
-        if (chosenTrack == null) {
-            chosenTrack = chooseStackIfMatch("e2", 11, stack, target, matched, chosenTrack);
-        }
-        if (chosenTrack == null) {
-            chosenTrack = chooseStackIfMatch("e3", 7, stack, target, matched, chosenTrack);
-        }
-
-        if (chosenTrack == null) {
-            score = 0;
-        } else {
-            score = switch (chosenTrack) {
-                case "e1" -> 15;
-                case "e2" -> 11;
-                case "e3" -> 7;
-                default -> 0;
-            };
+        for (StackTier tier : STACK_TIERS) {
+            chosenTrack = chooseStackIfMatch(tier.code, stack, target, matched, chosenTrack);
+            if (chosenTrack != null) {
+                score = tier.score;
+                break;
+            }
         }
 
         boolean jspDegraded = false;
-        if (jspFound && (chosenTrack == null || !"e3".equals(chosenTrack))) {
-            // JSP 포함 시 3순위(e3)로 강등
-            chosenTrack = "e3";
-            score = 7;
+        if (jspFound && (chosenTrack == null || !"e5".equals(chosenTrack))) {
+            chosenTrack = "e5";
+            score = 20;
             jspDegraded = true;
             matched.add("jsp");
         }
@@ -364,12 +354,11 @@ public class ScoringService {
         }
 
         ScoreComponent component = new ScoreComponent("E", "stack_fit", score, MAX_STACK_FIT, reason);
-        return new StackScoreResult(component, jspDegraded);
+        return new StackScoreResult(component, jspDegraded, List.copyOf(matched));
     }
 
     private String chooseStackIfMatch(
             String code,
-            int baseScore,
             Map<String, List<String>> stack,
             String target,
             List<String> matched,
@@ -503,7 +492,12 @@ public class ScoringService {
         return result;
     }
 
-    private record StackScoreResult(ScoreComponent component, boolean jspDegraded) {
-    }
+    private record StackTier(String code, int score) {}
+
+    private record StackScoreResult(
+            ScoreComponent component,
+            boolean jspDegraded,
+            List<String> matchedStackKeywords
+    ) {}
 }
 

@@ -116,35 +116,47 @@ joblens:
         - "15년 이상"
         - "시니어"
         - "원장급"
-    # 스택: 1순위 React/Next/Nest/Node/Express, 2순위 Spring/Java, 3순위 그 외
+    # 스택 세분화: e1(100) > e2(80) > e3(60) > e4(40) > e5(20). 첫 매칭 트랙만 적용.
     stack:
-      e1: # 1순위
+      e1:
         - "React"
         - "Next.js"
         - "Next"
+        - "TypeScript"
+        - "JavaScript"
         - "Nest"
         - "NestJS"
         - "Node.js"
         - "Node"
         - "Express"
-      e2: # 2순위
+      e2:
+        - "Vue"
+        - "Vue.js"
+        - "Angular"
+        - "Nuxt"
+        - "React Native"
+        - "Flutter"
+      e3:
         - "Spring Boot"
         - "Spring"
         - "SpringBoot"
         - "Spring WebFlux"
         - "Spring Framework"
         - "Java"
-      e3: # 3순위 (그 외)
+      e4:
         - "Kotlin"
-        - "JSP"
-        - "PHP"
-        - "Python"
         - "Go"
+        - "Golang"
+        - "Python"
+        - "Django"
+        - "FastAPI"
+      e5:
+        - "JSP"
+        - "jsp"
+        - "PHP"
         - "C#"
         - ".NET"
-    jsp:
-      - "JSP"
-      - "jsp"
+        - "ASP.NET"
     domain:
       product:
         - "자체 서비스"

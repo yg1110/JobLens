@@ -68,17 +68,17 @@ api/
 
 ### 1) 환경 변수 / .env
 
-| 변수 | 설명 | 기본값 |
-|------|------|--------|
-| `POSTGRES_DB` | JDBC URL | `jdbc:postgresql://localhost:5432/joblens` |
-| `POSTGRES_USER` | DB 사용자 | `joblens` |
-| `POSTGRES_PASSWORD` | DB 비밀번호 | **(필수)** |
-| `SMTP_HOST` | SMTP 호스트 | `smtp.gmail.com` |
-| `SMTP_PORT` | SMTP 포트 | `587` |
-| `SMTP_USERNAME` | SMTP 계정 | - |
-| `SMTP_PASSWORD` | SMTP 비밀번호 | - |
-| `NOTIFICATION_ENABLED` | 알림 스케줄러 on/off | `true` |
-| `NOTIFICATION_RECIPIENTS` | 수신자 이메일 (쉼표 구분) | - |
+| 변수                      | 설명                      | 기본값                                     |
+| ------------------------- | ------------------------- | ------------------------------------------ |
+| `POSTGRES_DB`             | JDBC URL                  | `jdbc:postgresql://localhost:5432/joblens` |
+| `POSTGRES_USER`           | DB 사용자                 | `joblens`                                  |
+| `POSTGRES_PASSWORD`       | DB 비밀번호               | **(필수)**                                 |
+| `SMTP_HOST`               | SMTP 호스트               | `smtp.gmail.com`                           |
+| `SMTP_PORT`               | SMTP 포트                 | `587`                                      |
+| `SMTP_USERNAME`           | SMTP 계정                 | -                                          |
+| `SMTP_PASSWORD`           | SMTP 비밀번호             | -                                          |
+| `NOTIFICATION_ENABLED`    | 알림 스케줄러 on/off      | `true`                                     |
+| `NOTIFICATION_RECIPIENTS` | 수신자 이메일 (쉼표 구분) | -                                          |
 
 `.env` 파일은 프로젝트 루트 또는 `api/` 디렉터리에 두면 `dotenv-java`로 자동 로드됩니다.
 
@@ -146,13 +146,13 @@ docker compose up -d
 
 ### API 엔드포인트
 
-| Method | Path | 설명 |
-|--------|------|------|
-| POST | `/api/job-postings/bulk` | 크롤러에서 공고 fetch → DB upsert |
-| POST | `/api/job-postings/score` | 크롤러에서 공고 fetch → 스코어링 후 JSON 반환 |
-| POST | `/api/emails/test` | 테스트 메일 발송 |
-| POST | `/api/notifications/trigger/hourly` | 매시 작업 수동 실행 (테스트용) |
-| POST | `/api/notifications/trigger/digest` | digest 발송 수동 실행 (테스트용) |
+| Method | Path                                | 설명                                          |
+| ------ | ----------------------------------- | --------------------------------------------- |
+| POST   | `/api/job-postings/bulk`            | 크롤러에서 공고 fetch → DB upsert             |
+| POST   | `/api/job-postings/score`           | 크롤러에서 공고 fetch → 스코어링 후 JSON 반환 |
+| POST   | `/api/emails/test`                  | 테스트 메일 발송                              |
+| POST   | `/api/notifications/trigger/hourly` | 매시 작업 수동 실행 (테스트용)                |
+| POST   | `/api/notifications/trigger/digest` | digest 발송 수동 실행 (테스트용)              |
 
 ### 예시
 
@@ -184,18 +184,19 @@ curl -X POST "http://localhost:8080/api/emails/test" \
 
 ## Scoring Engine
 
-총점 100점 기반으로 다음 항목을 평가합니다.
+총점 100점은 **E_stack_fit(기술 스택)**만 사용합니다.  
+나머지 항목(A~D, F~H)은 breakdown에만 표시됩니다.
 
-| 항목 | 최대 | 설명 |
-|------|------|------|
-| A_location | 15 | 근무지 (서울/경기/대전 우선) |
-| B_employment | 15 | 고용형태 (정규직 > 파견/프리랜서 > 전환형인턴 > 인턴) |
-| C_role_fit | 20 | 역할 (프론트엔드 > 풀스택 > 백엔드) |
-| D_experience_fit | 10 | 경력 (3~6년 > 신입/경력 > 7년↑) |
-| E_stack_fit | 15 | 기술 스택 (React/Next > Node/Nest > Spring > Java > JSP > PHP) |
-| F_domain | 10 | 도메인 (제품/플랫폼 > 혼합 > 금융SI) |
-| G_culture | 10 | 복지/워라밸 키워드 |
-| H_jd_quality | 5 | JD 상세 분량·섹션 수 |
+| 항목             | 설명                                                                  |
+| ---------------- | --------------------------------------------------------------------- |
+| E_stack_fit      | 기술 스택만 총점 반영 (만점 100). e1(100)>e2(80)>e3(60)>e4(40)>e5(20) |
+| A_location       | 근무지 (서울/경기/인천 우선) — 참고용                                 |
+| B_employment     | 고용형태 — 참고용                                                     |
+| C_role_fit       | 역할 — 참고용                                                         |
+| D_experience_fit | 경력 — 참고용                                                         |
+| F_domain         | 도메인 — 참고용                                                       |
+| G_culture        | 복지/워라밸 — 참고용                                                  |
+| H_jd_quality     | JD 품질 — 참고용                                                      |
 
 **Hard Filter** (적용 시 즉시 제외, 0점):
 
@@ -211,10 +212,10 @@ curl -X POST "http://localhost:8080/api/emails/test" \
 
 ## Scheduler
 
-| cron | 작업 | 설명 |
-|------|------|------|
+| cron                      | 작업                          | 설명                                    |
+| ------------------------- | ----------------------------- | --------------------------------------- |
 | 매시 08~21시 (Asia/Seoul) | `hourlyFetchAndImmediateSend` | fetch → 스코어 → 80점 초과 시 즉시 메일 |
-| 매일 09:00 | `dailyDigestSend` | 70점 이상·digest 미포함 건 1통 발송 |
+| 매일 09:00                | `dailyDigestSend`             | 70점 이상·digest 미포함 건 1통 발송     |
 
 - 22:00~08:00: quietHours로 즉시 발송 스킵
 - ShedLock으로 다중 인스턴스 시 스케줄 중복 실행 방지
