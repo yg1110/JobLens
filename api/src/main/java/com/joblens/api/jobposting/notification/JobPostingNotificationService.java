@@ -1,5 +1,8 @@
 package com.joblens.api.jobposting.notification;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -8,6 +11,7 @@ import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -179,8 +183,9 @@ public class JobPostingNotificationService {
         }
     }
 
-    /** 즉시 추천 공고 여러 건을 한 통으로 발송 */
+    /** 즉시 추천 공고 여러 건을 한 통으로 발송 (점수 높은 순) */
     private void sendBatchedImmediateEmail(List<ImmediateCandidate> candidates) throws MessagingException {
+        candidates.sort(Comparator.comparingInt((ImmediateCandidate c) -> c.response().getTotalScore()).reversed());
         String subject = "[JobLens 즉시 추천] " + candidates.size() + "건의 추천 공고";
         log.info("[Notification] 즉시 추천 이메일 발송 - subject={}, 수신자 {}명", subject, properties.getRecipients().size());
         String html = buildBatchedImmediateHtml(candidates);
@@ -195,46 +200,89 @@ public class JobPostingNotificationService {
         emailService.sendHtmlEmailToMany(properties.getRecipients(), subject, html);
     }
 
-    /** 즉시 추천 메일용 HTML 본문 생성 (여러 건 목록) */
+    private static final String TEMPLATE_IMMEDIATE = "templates/email/immediate-recommendation.html";
+    private static final String TEMPLATE_DIGEST = "templates/email/digest.html";
+
+    private String loadTemplate(String classPath) throws IOException {
+        ClassPathResource resource = new ClassPathResource(classPath);
+        try (InputStream is = resource.getInputStream()) {
+            return new String(is.readAllBytes(), StandardCharsets.UTF_8);
+        }
+    }
+
+    /** 즉시 추천 메일용 HTML 본문 생성 (템플릿 + 점수 높은 순 이미 정렬된 목록) */
     private String buildBatchedImmediateHtml(List<ImmediateCandidate> candidates) {
+        try {
+            String template = loadTemplate(TEMPLATE_IMMEDIATE);
+            StringBuilder items = new StringBuilder();
+            for (ImmediateCandidate c : candidates) {
+                JobPostingRequest job = c.job();
+                ScoreResponse response = c.response();
+                items.append("<div class=\"item\">");
+                items.append("<div class=\"item-title\">").append(escapeHtml(job.getCompany())).append(" - ").append(escapeHtml(job.getTitle())).append("</div>");
+                items.append("<div class=\"item-meta\">위치: ").append(escapeHtml(job.getLocation() != null ? job.getLocation() : "")).append("</div>");
+                items.append("<span class=\"item-score\">").append(response.getTotalScore()).append("점</span> ");
+                if (response.getMatchedStackKeywords() != null && !response.getMatchedStackKeywords().isEmpty()) {
+                    items.append("<div class=\"item-stack\">스택: ").append(escapeHtml(String.join(", ", response.getMatchedStackKeywords()))).append("</div>");
+                }
+                if (job.getUrl() != null) {
+                    items.append("<a href=\"").append(escapeHtml(job.getUrl())).append("\" class=\"item-link\">공고 보기</a>");
+                }
+                items.append("</div>");
+            }
+            return template.replace("{{COUNT}}", String.valueOf(candidates.size())).replace("{{ITEMS}}", items.toString());
+        } catch (IOException e) {
+            log.warn("[Notification] 즉시 추천 템플릿 로드 실패, 폴백 HTML 사용: {}", e.getMessage());
+            return buildFallbackImmediateHtml(candidates);
+        }
+    }
+
+    /** digest 메일용 HTML 본문 생성 (템플릿 + 점수 높은 순 이미 정렬된 목록) */
+    private String buildDigestHtml(List<JobPostingNotification> list) {
+        try {
+            String template = loadTemplate(TEMPLATE_DIGEST);
+            StringBuilder items = new StringBuilder();
+            for (JobPostingNotification n : list) {
+                items.append("<div class=\"item\">");
+                items.append("<div class=\"item-title\">").append(escapeHtml(n.getCompany())).append(" - ").append(escapeHtml(n.getTitle())).append("</div>");
+                items.append("<div class=\"item-meta\"><span class=\"item-score\">").append(n.getTotalScoreSnapshot()).append("점</span></div>");
+                if (n.getMatchedStackSnapshot() != null && !n.getMatchedStackSnapshot().isBlank()) {
+                    items.append("<div class=\"item-stack\">스택: ").append(escapeHtml(n.getMatchedStackSnapshot())).append("</div>");
+                }
+                items.append("<a href=\"").append(escapeHtml(n.getPostingId())).append("\" class=\"item-link\">공고 보기</a>");
+                items.append("</div>");
+            }
+            return template.replace("{{COUNT}}", String.valueOf(list.size())).replace("{{ITEMS}}", items.toString());
+        } catch (IOException e) {
+            log.warn("[Notification] digest 템플릿 로드 실패, 폴백 HTML 사용: {}", e.getMessage());
+            return buildFallbackDigestHtml(list);
+        }
+    }
+
+    private String buildFallbackImmediateHtml(List<ImmediateCandidate> candidates) {
         StringBuilder sb = new StringBuilder();
         sb.append("<!DOCTYPE html><html><head><meta charset=\"UTF-8\"></head><body>");
-        sb.append("<h2>즉시 추천 공고 (").append(candidates.size()).append("건)</h2>");
-        sb.append("<ul>");
+        sb.append("<h2>즉시 추천 공고 (").append(candidates.size()).append("건)</h2><ul>");
         for (ImmediateCandidate c : candidates) {
             JobPostingRequest job = c.job();
             ScoreResponse response = c.response();
-            sb.append("<li>");
-            sb.append("<strong>").append(escapeHtml(job.getCompany())).append("</strong> - ").append(escapeHtml(job.getTitle()));
-            sb.append(" | 위치: ").append(escapeHtml(job.getLocation()));
+            sb.append("<li><strong>").append(escapeHtml(job.getCompany())).append("</strong> - ").append(escapeHtml(job.getTitle()));
             sb.append(" | 점수: ").append(response.getTotalScore()).append("점");
-            if (response.getMatchedStackKeywords() != null && !response.getMatchedStackKeywords().isEmpty()) {
-                sb.append(" | 스택: ").append(escapeHtml(String.join(", ", response.getMatchedStackKeywords())));
-            }
-            if (job.getUrl() != null) {
-                sb.append(" <a href=\"").append(escapeHtml(job.getUrl())).append("\">공고 보기</a>");
-            }
+            if (job.getUrl() != null) sb.append(" <a href=\"").append(escapeHtml(job.getUrl())).append("\">공고 보기</a>");
             sb.append("</li>");
         }
         sb.append("</ul></body></html>");
         return sb.toString();
     }
 
-    /** digest 메일용 HTML 본문 생성 (공고 목록 리스트) */
-    private String buildDigestHtml(List<JobPostingNotification> list) {
+    private String buildFallbackDigestHtml(List<JobPostingNotification> list) {
         StringBuilder sb = new StringBuilder();
         sb.append("<!DOCTYPE html><html><head><meta charset=\"UTF-8\"></head><body>");
-        sb.append("<h2>오늘의 추천 채용 공고 (").append(list.size()).append("건)</h2>");
-        sb.append("<ul>");
+        sb.append("<h2>오늘의 추천 채용 공고 (").append(list.size()).append("건)</h2><ul>");
         for (JobPostingNotification n : list) {
-            sb.append("<li>");
-            sb.append(escapeHtml(n.getCompany())).append(" - ").append(escapeHtml(n.getTitle()));
+            sb.append("<li>").append(escapeHtml(n.getCompany())).append(" - ").append(escapeHtml(n.getTitle()));
             sb.append(" (").append(n.getTotalScoreSnapshot()).append("점)");
-            if (n.getMatchedStackSnapshot() != null && !n.getMatchedStackSnapshot().isBlank()) {
-                sb.append(" | 스택: ").append(escapeHtml(n.getMatchedStackSnapshot()));
-            }
-            sb.append(" <a href=\"").append(escapeHtml(n.getPostingId())).append("\">공고 보기</a>");
-            sb.append("</li>");
+            sb.append(" <a href=\"").append(escapeHtml(n.getPostingId())).append("\">공고 보기</a></li>");
         }
         sb.append("</ul></body></html>");
         return sb.toString();
