@@ -221,6 +221,7 @@ uvicorn api_app:app --reload --port 8000
   - 본문(`application/json`)으로 크롤링 옵션을 전달하고, 크롤링을 즉시 실행 후 결과를 JSON으로 반환.
   - 요청 Body 스키마: `CrawlRequest`
   - `recruit_page_count`: 페이지당 목록 개수(recruitPageCount). 1, 10, 20, 30, 40, 50, 80, 100 등. `null`이면 URL에 이미 있는 값 유지.
+  - `ocr_lang` 은 API 스키마에 없으며, OCR 언어는 크롤러 기본값 `kor+eng` 가 적용됩니다.
 
     ```json
     {
@@ -269,8 +270,7 @@ uvicorn api_app:app --reload --port 8000
 
 - `GET /jobs`
   - 이미 JSON 파일로 저장된 결과를 읽어오는 엔드포인트.
-  - 쿼리 파라미터:
-    - `file`: 조회할 JSON 파일 경로 (기본값: `saramin_jobs.json`, 실행 디렉터리 기준)
+  - 실행 디렉터리 기준 **고정 파일** `saramin_jobs.json` 을 읽어 반환합니다. (쿼리 파라미터 없음)
   - 응답 Body 스키마: `JobsFileResponse`
 
     ```json
@@ -307,17 +307,13 @@ uvicorn api_app:app --reload --port 8000
 ```bash
 curl -X POST "http://localhost:8000/crawl" \
   -H "Content-Type: application/json" \
-  -d '{
-    "pages": 2,
-    "detail": true,
-    "save_to_file": true,
-  }'
+  -d '{"pages": 2, "detail": true, "save_to_file": true}'
 ```
 
 - 저장된 결과 조회:
 
 ```bash
-curl "http://localhost:8000/jobs?file=saramin_jobs.json"
+curl "http://localhost:8000/jobs"
 ```
 
 ---

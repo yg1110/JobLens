@@ -94,17 +94,11 @@ api/
 
 ### 1) PostgreSQL 준비
 
-Docker Compose 사용 시:
+Docker Compose 사용 시 (`api/docker-compose.yml`은 `DB_PASSWORD`, 선택적으로 `DB_NAME`, `DB_USERNAME` 사용):
 
 ```bash
 cd api
-docker-compose up -d
-```
-
-`.env` 또는 환경변수로 `DB_PASSWORD` 설정 후:
-
-```bash
-export DB_PASSWORD=your_password
+export DB_PASSWORD=your_password   # 필수
 docker-compose up -d
 ```
 
@@ -146,26 +140,27 @@ docker compose up -d
 
 ### API 엔드포인트
 
-| Method | Path                                | 설명                                          |
-| ------ | ----------------------------------- | --------------------------------------------- |
-| POST   | `/api/job-postings/bulk`            | 크롤러에서 공고 fetch → DB upsert             |
-| POST   | `/api/job-postings/score`           | 크롤러에서 공고 fetch → 스코어링 후 JSON 반환 |
-| POST   | `/api/emails/test`                  | 테스트 메일 발송                              |
-| POST   | `/api/notifications/trigger/hourly` | 매시 작업 수동 실행 (테스트용)                |
-| POST   | `/api/notifications/trigger/digest` | digest 발송 수동 실행 (테스트용)              |
+| Method | Path                                | 설명                                              |
+| ------ | ----------------------------------- | ------------------------------------------------- |
+| POST   | `/api/job-postings/bulk`            | 크롤러 GET /jobs → DB upsert                      |
+| POST   | `/api/job-postings/score`           | 크롤러 GET /jobs → 스코어링 후 JSON 반환          |
+| POST   | `/api/job-postings/crawl`            | 크롤러 POST /crawl 프록시 (Body: CrawlRequest)    |
+| POST   | `/api/emails/test`                  | 테스트 메일 발송                                  |
+| POST   | `/api/notifications/trigger/hourly` | 매시 작업 수동 실행 (테스트용)                    |
+| POST   | `/api/notifications/trigger/digest` | digest 발송 수동 실행 (테스트용)                  |
 
 ### 예시
 
-**공고 bulk 저장**
+**공고 bulk 저장** (크롤러 `GET /jobs`에서 고정 파일 `saramin_jobs.json` 조회 후 DB upsert)
 
 ```bash
-curl -X POST "http://localhost:8080/api/job-postings/bulk?file=saramin_jobs.json"
+curl -X POST "http://localhost:8080/api/job-postings/bulk"
 ```
 
-**스코어링**
+**스코어링** (크롤러 `GET /jobs` 결과에 스코어 적용)
 
 ```bash
-curl -X POST "http://localhost:8080/api/job-postings/score?file=saramin_jobs.json"
+curl -X POST "http://localhost:8080/api/job-postings/score"
 ```
 
 **테스트 메일**
@@ -187,16 +182,16 @@ curl -X POST "http://localhost:8080/api/emails/test" \
 총점 100점 = **A_location(10)** + **C_role_fit(30)** + **E_stack_fit(60)**.  
 나머지 항목(B, D, F~H)은 breakdown에만 표시됩니다.
 
-| 항목             | 설명                                                               |
-| ---------------- | ------------------------------------------------------------------ |
-| A_location       | 근무지. 서울/경기/인천 10점 (총점 반영)                            |
-| B_employment     | 고용형태 — 참고용                                                  |
-| C_role_fit       | 역할. 풀스택(30)>프론트(20)>백엔드(10), 만점 30 (총점 반영)        |
-| D_experience_fit | 경력 — 참고용                                                      |
-| E_stack_fit      | 기술 스택. 만점 60. e1(60)>e2(48)>e3(36)>e4(24)>e5(12) (총점 반영) |
-| F_domain         | 도메인 — 참고용                                                    |
-| G_culture        | 복지/워라밸 — 참고용                                               |
-| H_jd_quality     | JD 품질 — 참고용                                                   |
+| 항목             | 설명                                                                    |
+| ---------------- | ----------------------------------------------------------------------- |
+| A_location       | 근무지. 서울/경기/인천 10점 (총점 반영)                                 |
+| B_employment     | 고용형태 — 참고용                                                       |
+| C_role_fit       | 역할. 풀스택(30)>프론트(20)>앱(10)>백엔드(10), 만점 30 (총점 반영)       |
+| D_experience_fit | 경력 — 참고용                                                           |
+| E_stack_fit      | 기술 스택. 만점 60. e1(60)>e2(48)>e3(36)>e4(24)>e5(12) (총점 반영)      |
+| F_domain         | 도메인 — 참고용                                                         |
+| G_culture        | 복지/워라밸 — 참고용                                                    |
+| H_jd_quality     | JD 품질 — 참고용                                                        |
 
 **Hard Filter** (적용 시 즉시 제외, 0점):
 
