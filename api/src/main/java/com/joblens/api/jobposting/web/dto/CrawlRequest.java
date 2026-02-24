@@ -17,7 +17,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
     description = "크롤링 옵션. 생략 시 크롤러 기본값 사용.",
     example = """
     {
-      "url": "https://www.saramin.co.kr/zf_user/jobs/list/domestic?page=1&loc_mcd=101000%2C102000%2C108000&cat_kewd=87%2C92%2C86&search_optional_item=n&search_done=y&panel_count=y&preview=y&sort=RD&isAjaxRequest=1&page_count=20&type=domestic&is_param=1&isSearchResultEmpty=1&isSectionHome=0&searchParamCount=2",
+      "url": "https://www.saramin.co.kr/zf_user/jobs/list/job-category?page=1&cat_kewd=87%2C84%2C92&job_type=1&exc_keyword=php&loc_mcd=101000%2C102000%2C108000&search_optional_item=y&search_done=y&panel_count=y&preview=y&sort=RD&isAjaxRequest=1&page_count=50&type=job-category&is_param=1&isSearchResultEmpty=1&isSectionHome=0&searchParamCount=4#searchTitle",
       "pages": 2,
       "recruit_page_count": 10,
       "list_delay": 1.8,
@@ -33,7 +33,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 public class CrawlRequest {
 
     /** 매시간 스케줄 크롤링용 기본 사람인 검색 URL */
-    private static final String DEFAULT_URL = "https://www.saramin.co.kr/zf_user/jobs/list/job-category?cat_kewd=86%2C87%2C92%2C84&loc_mcd=101000%2C102000%2C108000&keydownAccess=&panel_type=&search_optional_item=n&search_done=y&panel_count=y&preview=y&page=1&page_count=20&sort=RD";
+    private static final String DEFAULT_URL = "https://www.saramin.co.kr/zf_user/jobs/list/job-category?page=1&cat_kewd=87%2C84%2C92&job_type=1&exc_keyword=php&loc_mcd=101000%2C102000%2C108000&search_optional_item=y&search_done=y&panel_count=y&preview=y&sort=RD&isAjaxRequest=1&page_count=50&type=job-category&is_param=1&isSearchResultEmpty=1&isSectionHome=0&searchParamCount=4#searchTitle";
 
     @Schema(description = "사람인 검색 URL(필터 포함). 미지정 시 크롤러 기본 URL 사용")
     private String url;

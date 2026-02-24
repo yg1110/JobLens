@@ -31,7 +31,7 @@ from saramin.crawler import crawl_list, enrich_jobs_with_details, save_json
 # - 사람인 검색 결과 페이지에 각종 필터(cat_kewd, company_cd, recruitSort 등)가 포함되어 있음
 # - recruitPage=1로 시작하지만, 실제 페이지 이동은 list_urls.build_paged_url에서 recruitPage를 덮어씀
 DEFAULT_URL = (
-  "https://www.saramin.co.kr/zf_user/jobs/list/job-category?cat_kewd=86%2C87%2C92%2C84&loc_mcd=101000%2C102000%2C108000&keydownAccess=&panel_type=&search_optional_item=n&search_done=y&panel_count=y&preview=y&page=1&page_count=20&sort=RD"
+  "https://www.saramin.co.kr/zf_user/jobs/list/job-category?page=1&cat_kewd=87%2C84%2C92&job_type=1&exc_keyword=php&loc_mcd=101000%2C102000%2C108000&search_optional_item=y&search_done=y&panel_count=y&preview=y&sort=RD&isAjaxRequest=1&page_count=50&type=job-category&is_param=1&isSearchResultEmpty=1&isSectionHome=0&searchParamCount=4#searchTitle"
 )
 
 
