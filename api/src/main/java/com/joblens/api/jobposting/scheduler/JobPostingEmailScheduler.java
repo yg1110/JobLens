@@ -5,6 +5,7 @@ import com.joblens.api.jobposting.notification.JobPostingNotificationService;
 import com.joblens.api.jobposting.notification.NotificationProperties;
 import com.joblens.api.jobposting.web.dto.CrawlRequest;
 import com.joblens.api.jobposting.web.dto.CrawlResponse;
+import com.joblens.api.jobposting.web.dto.JobKoreaCrawlRequest;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,26 +42,52 @@ public class JobPostingEmailScheduler {
     }
 
     /**
-     * 매시 55분: 크롤러 POST /crawl 호출. 5분 후 정각에 fetch 시 데이터 반영.
+     * 매시 50분: 사람인 크롤러 POST /crawl/saramin 호출.
+     * 5분 후 정각에 fetch 시 데이터 반영.
      */
-    @Scheduled(cron = "0 55 7-20 * * ?", zone = "Asia/Seoul")
-    @SchedulerLock(name = "hourlyCrawlTrigger", lockAtMostFor = "PT4M", lockAtLeastFor = "PT1M")
-    public void hourlyCrawlTrigger() {
-        log.info("[Scheduler] hourlyCrawlTrigger 스케줄 실행");
+    @Scheduled(cron = "0 50 7-20 * * ?", zone = "Asia/Seoul")
+    @SchedulerLock(name = "hourlySaraminCrawlTrigger", lockAtMostFor = "PT4M", lockAtLeastFor = "PT1M")
+    public void hourlySaraminCrawlTrigger() {
+        log.info("[Scheduler] hourlySaraminCrawlTrigger 스케줄 실행");
         if (!properties.isEnabled()) {
-            log.info("[Scheduler] hourlyCrawlTrigger 스킵 - 알림 비활성화(enabled=false)");
+            log.info("[Scheduler] hourlySaraminCrawlTrigger 스킵 - 알림 비활성화(enabled=false)");
             return;
         }
         if (isQuietHours()) {
-            log.info("[Scheduler] hourlyCrawlTrigger 스킵 - 금지 시간대(22:00~08:00)");
+            log.info("[Scheduler] hourlySaraminCrawlTrigger 스킵 - 금지 시간대(22:00~08:00)");
             return;
         }
         try {
             CrawlRequest request = CrawlRequest.defaultForHourly();
-            CrawlResponse response = crawlerClient.crawl(request);
-            log.info("[Scheduler] hourlyCrawlTrigger 정상 완료 count={}", response.getCount());
+            CrawlResponse response = crawlerClient.crawlSaramin(request);
+            log.info("[Scheduler] hourlySaraminCrawlTrigger 정상 완료 count={}", response.getCount());
         } catch (Exception e) {
-            log.error("[Scheduler] hourlyCrawlTrigger 실패: {}", e.getMessage(), e);
+            log.error("[Scheduler] hourlySaraminCrawlTrigger 실패: {}", e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 매시 55분: 잡코리아 크롤러 POST /crawl/jobkorea 호출.
+     * 5분 후 정각에 fetch 시 데이터 반영.
+     */
+    @Scheduled(cron = "0 55 7-20 * * ?", zone = "Asia/Seoul")
+    @SchedulerLock(name = "hourlyJobkoreaCrawlTrigger", lockAtMostFor = "PT4M", lockAtLeastFor = "PT1M")
+    public void hourlyJobkoreaCrawlTrigger() {
+        log.info("[Scheduler] hourlyJobkoreaCrawlTrigger 스케줄 실행");
+        if (!properties.isEnabled()) {
+            log.info("[Scheduler] hourlyJobkoreaCrawlTrigger 스킵 - 알림 비활성화(enabled=false)");
+            return;
+        }
+        if (isQuietHours()) {
+            log.info("[Scheduler] hourlyJobkoreaCrawlTrigger 스킵 - 금지 시간대(22:00~08:00)");
+            return;
+        }
+        try {
+            JobKoreaCrawlRequest request = JobKoreaCrawlRequest.defaultForHourly();
+            CrawlResponse response = crawlerClient.crawlJobkorea(request);
+            log.info("[Scheduler] hourlyJobkoreaCrawlTrigger 정상 완료 count={}", response.getCount());
+        } catch (Exception e) {
+            log.error("[Scheduler] hourlyJobkoreaCrawlTrigger 실패: {}", e.getMessage(), e);
         }
     }
 
