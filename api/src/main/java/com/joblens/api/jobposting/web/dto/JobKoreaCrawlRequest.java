@@ -18,11 +18,11 @@ import io.swagger.v3.oas.annotations.media.Schema;
     example = """
     {
       "url": "https://www.jobkorea.co.kr/Search?tabType=recruit&Ord=ApplyCloseDtAsc&Page_No=1&duty=1000229%2C1000230%2C1000231%2C1000232&jobtype=1&excludeText=php%2Cjava%2Cspring",
-      "pages": 1,
-      "page_size": 20,
+      "pages": 3,
+      "recruit_page_count": 10,
       "list_delay": 1.8,
       "detail": true,
-      "detail_limit": 20,
+      "detail_limit": 30,
       "detail_delay": 1.2,
       "ocr": true,
       "ocr_max_images": 3,
@@ -41,18 +41,12 @@ public class JobKoreaCrawlRequest {
     @Schema(description = "목록 페이지 최대 크롤링 페이지 수")
     private Integer pages;
 
-    @JsonProperty("page_size")
-    @JsonAlias({"pageSize"})
-    @Schema(description = "페이지당 목록 개수(Page_Size). 미지정 시 URL 기존값 유지", name = "page_size")
-    private Integer pageSize;
-
-    /**
-     * 사람인 요청 모델과의 일관성을 위해 recruit_page_count 도 입력으로 허용한다.
-     * 이 값이 들어오면 page_size 값을 덮어쓴다.
-     */
-    @JsonProperty(value = "recruit_page_count", access = JsonProperty.Access.WRITE_ONLY)
-    @JsonAlias({"recruitPageCount"})
-    @Schema(description = "[입력 전용] page_size 와 동일한 의미. 지정 시 page_size 를 이 값으로 덮어쓴다.", name = "recruit_page_count")
+    @JsonProperty("recruit_page_count")
+    @JsonAlias({"recruitPageCount", "page_size", "pageSize"})
+    @Schema(
+        description = "페이지당 목록 개수(recruit_page_count). 1, 10, 20, 30, 40, 50, 80, 100 등. 미지정 시 URL 기존값 유지",
+        name = "recruit_page_count"
+    )
     private Integer recruitPageCount;
 
     @JsonProperty("list_delay")
@@ -94,17 +88,8 @@ public class JobKoreaCrawlRequest {
     public Integer getPages() { return pages; }
     public void setPages(Integer pages) { this.pages = pages; }
 
-    public Integer getPageSize() { return pageSize; }
-    public void setPageSize(Integer pageSize) { this.pageSize = pageSize; }
-
     public Integer getRecruitPageCount() { return recruitPageCount; }
-    public void setRecruitPageCount(Integer recruitPageCount) {
-        this.recruitPageCount = recruitPageCount;
-        // recruit_page_count 가 설정되면 page_size 를 이 값으로 덮어쓴다.
-        if (recruitPageCount != null) {
-            this.pageSize = recruitPageCount;
-        }
-    }
+    public void setRecruitPageCount(Integer recruitPageCount) { this.recruitPageCount = recruitPageCount; }
 
     public Double getListDelay() { return listDelay; }
     public void setListDelay(Double listDelay) { this.listDelay = listDelay; }
@@ -129,16 +114,16 @@ public class JobKoreaCrawlRequest {
 
     /**
      * 매시간 스케줄 크롤링에 사용하는 기본 요청.
-     * (url, pages=1, page_size=20, list_delay=1.8, detail=true, detail_limit=20, detail_delay=1.2, ocr=true, ocr_max_images=3, save_to_file=true)
+     * (url, pages=1, recruit_page_count=20, list_delay=1.8, detail=true, detail_limit=20, detail_delay=1.2, ocr=true, ocr_max_images=3, save_to_file=true)
      */
     public static JobKoreaCrawlRequest defaultForHourly() {
         JobKoreaCrawlRequest r = new JobKoreaCrawlRequest();
         r.setUrl(DEFAULT_URL);
-        r.setPages(1);
-        r.setPageSize(20);
+        r.setPages(3);
+        r.setRecruitPageCount(10);
         r.setListDelay(1.8);
         r.setDetail(true);
-        r.setDetailLimit(20);
+        r.setDetailLimit(30);
         r.setDetailDelay(1.2);
         r.setOcr(true);
         r.setOcrMaxImages(3);

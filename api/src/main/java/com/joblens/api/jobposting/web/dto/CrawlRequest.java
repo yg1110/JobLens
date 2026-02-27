@@ -18,11 +18,11 @@ import io.swagger.v3.oas.annotations.media.Schema;
     example = """
     {
       "url": "https://www.saramin.co.kr/zf_user/jobs/list/domestic?loc_mcd=101000%2C102000%2C108000&cat_kewd=84%2C87%2C86%2C92&job_type=1&exc_keyword=php%2Cjsp%2Cjava%2Cspring&panel_type=&search_optional_item=y&search_done=y&panel_count=y&preview=y&page=1&sort=RD",
-      "pages": 2,
+      "pages": 3,
       "recruit_page_count": 10,
       "list_delay": 1.8,
       "detail": true,
-      "detail_limit": 20,
+      "detail_limit": 30,
       "detail_delay": 1.2,
       "ocr": true,
       "ocr_max_images": 3,
@@ -116,11 +116,11 @@ public class CrawlRequest {
     public static CrawlRequest defaultForHourly() {
         CrawlRequest r = new CrawlRequest();
         r.setUrl(DEFAULT_URL);
-        r.setPages(2);
+        r.setPages(3);
         r.setRecruitPageCount(10);
         r.setListDelay(1.8);
         r.setDetail(true);
-        r.setDetailLimit(20);
+        r.setDetailLimit(30);
         r.setDetailDelay(1.2);
         r.setOcr(true);
         r.setOcrMaxImages(3);

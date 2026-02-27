@@ -21,11 +21,11 @@ from jobkorea.list_urls import with_page_size
 # API 기본 요청값(사람인)
 DEFAULT_CRAWL_REQUEST = {
     "url": "https://www.saramin.co.kr/zf_user/jobs/list/domestic?loc_mcd=101000%2C102000%2C108000&cat_kewd=84%2C87%2C86%2C92&job_type=1&exc_keyword=php%2Cjsp%2Cjava%2Cspring&panel_type=&search_optional_item=y&search_done=y&panel_count=y&preview=y&page=1&sort=RD",
-    "pages": 1,
-    "recruit_page_count": 20,
+    "pages": 3,
+    "recruit_page_count": 10,
     "list_delay": 1.8,
     "detail": True,
-    "detail_limit": 20,
+    "detail_limit": 30,
     "detail_delay": 1.2,
     "ocr": True,
     "ocr_max_images": 3,
@@ -35,11 +35,11 @@ DEFAULT_CRAWL_REQUEST = {
 # API 기본 요청값(잡코리아)
 DEFAULT_JOBKOREA_CRAWL_REQUEST = {
     "url": "https://www.jobkorea.co.kr/Search?tabType=recruit&Ord=ApplyCloseDtAsc&Page_No=1&duty=1000229%2C1000230%2C1000231%2C1000232&jobtype=1&excludeText=php%2Cjava%2Cspring",
-    "pages": 1,
-    "page_size": 20,
+    "pages": 3,
+    "recruit_page_count": 10,
     "list_delay": 1.8,
     "detail": True,
-    "detail_limit": 20,
+    "detail_limit": 30,
     "detail_delay": 1.2,
     "ocr": True,
     "ocr_max_images": 3,
@@ -125,10 +125,10 @@ class JobKoreaCrawlRequest(BaseModel):
         ge=1,
         description="목록(list) 페이지를 최대 몇 페이지까지 크롤링할지",
     )
-    page_size: Optional[int] = Field(
-        DEFAULT_JOBKOREA_CRAWL_REQUEST["page_size"],
+    recruit_page_count: Optional[int] = Field(
+        DEFAULT_JOBKOREA_CRAWL_REQUEST["recruit_page_count"],
         ge=1,
-        description="페이지당 목록 개수(Page_Size). 미지정 시 URL 기존값 유지",
+        description="페이지당 목록 개수(recruit_page_count). 1, 10, 20, 30, 40, 50, 80, 100 등. 미지정 시 URL 기존값 유지",
     )
     list_delay: float = Field(
         DEFAULT_JOBKOREA_CRAWL_REQUEST["list_delay"],
@@ -373,6 +373,18 @@ def run_crawl(req: CrawlRequest) -> CrawlResponse:
     # 1-1) 이미 saramin_jobs.json에 있는 공고는 스킵
     jobs = [j for j in jobs if j.url not in existing_urls]
 
+    # 1-2) pages / recruit_page_count / detail_limit 조합으로
+    #      전체 응답 개수 상한을 계산한다.
+    #      - recruit_page_count 가 주어지면: pages * recruit_page_count
+    #      - detail_limit 이 주어지면: 위와 detail_limit 중 더 작은 값
+    max_jobs: Optional[int] = None
+    if req.recruit_page_count is not None and req.recruit_page_count > 0:
+        max_jobs = req.pages * req.recruit_page_count
+    if req.detail_limit is not None and req.detail_limit >= 0:
+        max_jobs = min(max_jobs, req.detail_limit) if max_jobs is not None else req.detail_limit
+    if max_jobs is not None:
+        jobs = jobs[: max_jobs]
+
     # 2) 상세 수집(옵션)
     if req.detail:
         jobs = enrich_jobs_with_details(
@@ -417,7 +429,7 @@ def run_crawl(req: CrawlRequest) -> CrawlResponse:
     tags=["jobkorea"],
     summary="잡코리아 목록 크롤링 실행",
 )
-def run_jobkorea_crawl(req: JobKoreaCrawlRequest) -> CrawlResponse:
+async def run_jobkorea_crawl(req: JobKoreaCrawlRequest) -> CrawlResponse:
     """
     잡코리아 목록 크롤러를 실행하는 엔드포인트.
 
@@ -431,10 +443,10 @@ def run_jobkorea_crawl(req: JobKoreaCrawlRequest) -> CrawlResponse:
     existing_jobs = jk_load_json("jobkorea_jobs.json")
     existing_urls = {j.get("url") for j in existing_jobs if j.get("url")}
 
-    # 1) 목록 수집 (page_size 지정 시 URL에 반영)
+    # 1) 목록 수집 (recruit_page_count 지정 시 URL에 반영)
     list_url = req.url
-    if req.page_size is not None:
-        list_url = with_page_size(req.url, req.page_size)
+    if req.recruit_page_count is not None:
+        list_url = with_page_size(req.url, req.recruit_page_count)
 
     jobs = jk_crawl_list(
         base_url=list_url,
@@ -444,6 +456,16 @@ def run_jobkorea_crawl(req: JobKoreaCrawlRequest) -> CrawlResponse:
 
     # 1-1) 이미 jobkorea_jobs.json 에 있는 공고는 스킵
     jobs = [j for j in jobs if j.url not in existing_urls]
+
+    # 1-2) pages / recruit_page_count / detail_limit 조합으로
+    #      전체 응답 개수 상한을 계산한다.
+    max_jobs: Optional[int] = None
+    if req.recruit_page_count is not None and req.recruit_page_count > 0:
+        max_jobs = req.pages * req.recruit_page_count
+    if req.detail_limit is not None and req.detail_limit >= 0:
+        max_jobs = min(max_jobs, req.detail_limit) if max_jobs is not None else req.detail_limit
+    if max_jobs is not None:
+        jobs = jobs[: max_jobs]
 
     # 2) 상세 수집(옵션)
     if req.detail:
