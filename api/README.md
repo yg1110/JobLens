@@ -1,12 +1,12 @@
 # JobLens API
 
-사람인(Saramin) 크롤러에서 수집한 채용 공고를 DB에 저장하고, **스코어링 엔진**으로 추천 여부를 판단한 뒤 **이메일 알림**을 발송하는 Spring Boot REST API입니다.
+사람인(Saramin)·잡코리아(JobKorea) 크롤러에서 수집한 채용 공고를 DB에 저장하고, **스코어링 엔진**으로 추천 여부를 판단한 뒤 **이메일 알림**을 발송하는 Spring Boot REST API입니다.
 
 ---
 
 ## Features
 
-- **채용 공고 bulk 저장**: 크롤러 `GET /jobs` API 호출 → JSON → DB upsert
+- **채용 공고 bulk 저장**: 크롤러 `GET /jobs/saramin`, `GET /jobs/jobkorea` API 호출 → 통합(JSON) → DB upsert
 - **스코어링 엔진**: 키워드 기반 점수화(근무지·고용형태·역할·경력·스택·도메인·복지·JD 품질) → 추천/보류/비추천 판정
 - **이메일 알림**
   - **매시간(08~21시)**: 크롤러 fetch → 스코어 → 80점 초과 시 즉시 메일 1통 발송
@@ -31,7 +31,7 @@ api/
         dto/TestEmailRequest.java
     jobposting/
       client/
-        CrawlerClient.java              # 크롤러 GET /jobs 호출
+        CrawlerClient.java              # 크롤러 GET /jobs/saramin, /jobs/jobkorea 호출
         CrawlerClientException.java
       domain/
         JobPosting.java
@@ -140,24 +140,25 @@ docker compose up -d
 
 ### API 엔드포인트
 
-| Method | Path                                | 설명                                              |
-| ------ | ----------------------------------- | ------------------------------------------------- |
-| POST   | `/api/job-postings/bulk`            | 크롤러 GET /jobs → DB upsert                      |
-| POST   | `/api/job-postings/score`           | 크롤러 GET /jobs → 스코어링 후 JSON 반환          |
-| POST   | `/api/job-postings/crawl`            | 크롤러 POST /crawl 프록시 (Body: CrawlRequest)    |
-| POST   | `/api/emails/test`                  | 테스트 메일 발송                                  |
-| POST   | `/api/notifications/trigger/hourly` | 매시 작업 수동 실행 (테스트용)                    |
-| POST   | `/api/notifications/trigger/digest` | digest 발송 수동 실행 (테스트용)                  |
+| Method | Path                                  | 설명                                                             |
+| ------ | ------------------------------------- | ---------------------------------------------------------------- |
+| POST   | `/api/job-postings/bulk`              | 크롤러 GET /jobs/saramin, /jobs/jobkorea → 통합 후 DB upsert     |
+| POST   | `/api/job-postings/score`             | 크롤러 GET /jobs/saramin, /jobs/jobkorea → 통합 후 스코어링 JSON |
+| POST   | `/api/job-postings/crawl/saramin`     | 크롤러 POST /crawl/saramin 프록시 (Body: CrawlRequest)          |
+| POST   | `/api/job-postings/crawl/jobkorea`    | 크롤러 POST /crawl/jobkorea 프록시 (Body: JobKoreaCrawlRequest) |
+| POST   | `/api/emails/test`                    | 테스트 메일 발송                                                 |
+| POST   | `/api/notifications/trigger/hourly`   | 매시 작업 수동 실행 (테스트용)                                   |
+| POST   | `/api/notifications/trigger/digest`   | digest 발송 수동 실행 (테스트용)                                 |
 
 ### 예시
 
-**공고 bulk 저장** (크롤러 `GET /jobs`에서 고정 파일 `saramin_jobs.json` 조회 후 DB upsert)
+**공고 bulk 저장** (크롤러 `GET /jobs/saramin`, `GET /jobs/jobkorea` 결과를 통합해 DB upsert)
 
 ```bash
 curl -X POST "http://localhost:8080/api/job-postings/bulk"
 ```
 
-**스코어링** (크롤러 `GET /jobs` 결과에 스코어 적용)
+**스코어링** (크롤러 `GET /jobs/saramin`, `GET /jobs/jobkorea` 결과에 스코어 적용)
 
 ```bash
 curl -X POST "http://localhost:8080/api/job-postings/score"
@@ -219,6 +220,6 @@ curl -X POST "http://localhost:8080/api/emails/test" \
 
 ## Notes
 
-- 크롤러 서버가 `http://localhost:8000`에서 실행 중이어야 bulk/score API가 동작합니다.
+- 크롤러 서버가 `http://localhost:8000` (또는 `joblens.crawler.base-url`/`JOBLENS_CRAWLER_BASE_URL` 설정 값)에서 실행 중이어야 bulk/score API가 동작합니다.
 - 이메일 발송은 `.env`의 SMTP 설정이 필요합니다. (Gmail: 앱 비밀번호 사용)
 - 알림을 끄려면 `NOTIFICATION_ENABLED=false` 또는 `joblens.notification.enabled: false` 설정.

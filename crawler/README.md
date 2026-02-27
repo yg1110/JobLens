@@ -1,16 +1,16 @@
-# Saramin Crawler
+# JobLens Crawler (Saramin + JobKorea)
 
-사람인(Saramin) 검색 결과(목록)에서 채용 공고를 수집하고, 옵션으로 상세 페이지(view-ajax → iframe view-detail)까지 파싱해 **JSON으로 저장**하는 크롤러입니다.  
+사람인(Saramin)·잡코리아(JobKorea) 검색 결과(목록)에서 채용 공고를 수집하고, 옵션으로 상세 페이지(view-ajax → iframe view-detail 등)까지 파싱해 **JSON으로 저장**하는 크롤러입니다.  
 상세가 이미지 기반으로 제공되는 경우(텍스트 거의 없음)에는 **OCR fallback(pytesseract + pillow)** 을 통해 텍스트를 추출하고, 섹션(주요업무/자격요건/근무조건 등) 단위로 분리합니다.
 
-> ⚠️ 참고: 사람인 페이지 구조/정책은 변할 수 있습니다.  
+> ⚠️ 참고: 사람인/잡코리아 페이지 구조/정책은 변할 수 있습니다.  
 > 본 프로젝트는 개인 학습/리서치 목적의 예시이며, 서비스 이용약관/robots.txt/법적 규정을 준수하세요.
 
 ---
 
 ## Features
 
-- **목록 수집**
+- **목록 수집 (사람인/잡코리아)**
   - Saramin 검색 URL(필터 포함)을 입력하면 페이지 단위로 공고 수집
   - `recruitPage` 파라미터를 갱신해 다음 페이지로 이동
   - URL 기준 중복 제거
@@ -51,6 +51,13 @@ crawler/
     detail_fetcher.py       # fetch_detail_iframe_html (view-ajax → iframe)
     detail_parser.py        # parse_detail_sections, split_text_by_headings (SECTION_TITLE_MAP)
     ocr_image_parser.py     # extract_image_urls, looks_like_image_only_detail, ocr_images_to_text
+    crawler.py              # crawl_list, enrich_jobs_with_details, load_json, save_json
+  jobkorea/
+    models.py               # JobPosting, DetailContext (잡코리아용)
+    http.py                 # make_session, fetch_html
+    list_urls.py            # with_page_size
+    list_parser.py          # 목록 페이지 파서
+    detail_fetcher.py       # 상세 페이지 HTML fetch
     crawler.py              # crawl_list, enrich_jobs_with_details, load_json, save_json
 ```
 
@@ -217,7 +224,7 @@ uvicorn api_app:app --reload --port 8000
 - `GET /health`
   - 단순 헬스체크. `{ "status": "ok" }` 형태의 JSON 반환.
 
-- `POST /crawl`
+- `POST /crawl/saramin`
   - 본문(`application/json`)으로 크롤링 옵션을 전달하고, 크롤링을 즉시 실행 후 결과를 JSON으로 반환.
   - 요청 Body 스키마: `CrawlRequest`
   - `recruit_page_count`: 페이지당 목록 개수(recruitPageCount). 1, 10, 20, 30, 40, 50, 80, 100 등. `null`이면 URL에 이미 있는 값 유지.
@@ -268,7 +275,7 @@ uvicorn api_app:app --reload --port 8000
     }
     ```
 
-- `GET /jobs`
+- `GET /jobs/saramin`
   - 이미 JSON 파일로 저장된 결과를 읽어오는 엔드포인트.
   - 실행 디렉터리 기준 **고정 파일** `saramin_jobs.json` 을 읽어 반환합니다. (쿼리 파라미터 없음)
   - 응답 Body 스키마: `JobsFileResponse`
@@ -302,18 +309,18 @@ uvicorn api_app:app --reload --port 8000
 
 ### 3) curl 예시
 
-- 목록 2페이지 + 상세 + 파일 저장:
+- 목록 2페이지 + 상세 + 파일 저장(사람인):
 
 ```bash
-curl -X POST "http://localhost:8000/crawl" \
+curl -X POST "http://localhost:8000/crawl/saramin" \
   -H "Content-Type: application/json" \
   -d '{"pages": 2, "detail": true, "save_to_file": true}'
 ```
 
-- 저장된 결과 조회:
+- 저장된 결과 조회(사람인):
 
 ```bash
-curl "http://localhost:8000/jobs"
+curl "http://localhost:8000/jobs/saramin"
 ```
 
 ---

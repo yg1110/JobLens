@@ -1,6 +1,6 @@
 # JobLens — 채용공고 자동 수집·필터링·의사결정 지원 (진행중)
 
-사람인 채용공고를 수집하고, **스코어링 엔진**으로 추천/보류/제외를 판단한 뒤 **이메일 알림**을 발송하는 개인용 의사결정 지원 시스템입니다.
+사람인·잡코리아 채용공고를 수집하고, **스코어링 엔진**으로 추천/보류/제외를 판단한 뒤 **이메일 알림**을 발송하는 개인용 의사결정 지원 시스템입니다.
 
 > 목표: "하루 15분 안에 지원 의사결정 끝내기"
 
@@ -22,17 +22,17 @@
   사람인 사이트                    PostgreSQL + SMTP
 ```
 
-- **crawler**: 사람인 목록/상세 수집 → JSON 저장, FastAPI로 `/jobs`·`/crawl` 제공
-- **api**: 크롤러 `GET /jobs` 호출 → 스코어링 → DB upsert / 이메일 알림
+- **crawler**: 사람인·잡코리아 목록/상세 수집 → `saramin_jobs.json`, `jobkorea_jobs.json` 저장, FastAPI로 `/crawl/saramin`, `/crawl/jobkorea`, `/jobs/saramin`, `/jobs/jobkorea` 제공
+- **api**: 크롤러 `GET /jobs/saramin`, `GET /jobs/jobkorea` 호출 → 스코어링 → DB upsert / 이메일 알림
 
 ---
 
 ## 프로젝트 구조
 
-| 디렉터리                        | 설명                                                    |
-| ------------------------------- | ------------------------------------------------------- |
-| [`crawler/`](crawler/README.md) | Python 크롤러 (사람인 목록·상세, OCR fallback, FastAPI) |
-| [`api/`](api/README.md)         | Spring Boot API (스코어링, bulk 저장, 이메일 스케줄러)  |
+| 디렉터리                        | 설명                                                                 |
+| ------------------------------- | -------------------------------------------------------------------- |
+| [`crawler/`](crawler/README.md) | Python 크롤러 (사람인·잡코리아 목록·상세, OCR fallback, FastAPI)     |
+| [`api/`](api/README.md)         | Spring Boot API (사람인·잡코리아 통합 스코어링, bulk 저장, 이메일 스케줄러) |
 
 ---
 
@@ -72,7 +72,7 @@
 
 ### Crawler — API (FastAPI)
 
-- `GET /jobs`, `POST /crawl` 문서화 (`/docs`)
+- `POST /crawl/saramin`, `POST /crawl/jobkorea`, `GET /jobs/saramin`, `GET /jobs/jobkorea` 문서화 (`/docs`)
 
 ![크롤러 API 문서](/img/python-api.png)
 
@@ -80,69 +80,58 @@
 
 - 추천/보류/비추천 판정, 항목별 점수 breakdown
 
-```python
+```json
 {
+  "decision": "추천",
+  "excluded": false,
+  "totalScore": 71,
   "breakdown": {
     "A_location": {
       "code": "A",
       "name": "location",
-      "score": 15,
-      "maxScore": 15,
-      "reason": "서울/경기/대전 근무지"
+      "reason": "서울/경기/인천 근무지"
     },
     "B_employment": {
       "code": "B",
       "name": "employment",
-      "score": 15,
-      "maxScore": 15,
       "reason": "정규직"
     },
     "C_role_fit": {
       "code": "C",
       "name": "role_fit",
-      "score": 20,
-      "maxScore": 20,
       "reason": "프론트엔드 중심 포지션"
     },
     "D_experience_fit": {
       "code": "D",
       "name": "experience_fit",
-      "score": 7,
-      "maxScore": 10,
       "reason": "신입·경력 혼합"
     },
     "E_stack_fit": {
       "code": "E",
       "name": "stack_fit",
-      "score": 9,
-      "maxScore": 15,
       "reason": "스택 트랙: E4"
     },
     "F_domain": {
       "code": "F",
       "name": "domain",
-      "score": 0,
-      "maxScore": 10,
       "reason": "도메인 정보 부족"
     },
     "G_culture": {
       "code": "G",
       "name": "culture",
-      "score": 0,
-      "maxScore": 10,
       "reason": "근무제/복지/워라밸 관련 정보 부족"
     },
     "H_jd_quality": {
       "code": "H",
       "name": "jd_quality",
-      "score": 5,
-      "maxScore": 5,
       "reason": "상세 JD 분량 및 섹션이 충분함"
     }
   },
-  "decision": "추천",
-  "excluded": false,
-  "flags": [],
+  "matchedStackKeywords": [
+    "React",
+    "TypeScript",
+    "Next.js"
+  ],
   "matchedKeywords": {
     "D_experience_fit": [
       "신입",
@@ -166,7 +155,7 @@
       "정규직"
     ]
   },
-  "totalScore": 71
+  "flags": []
 }
 ```
 
@@ -233,9 +222,9 @@ docker-compose up -d   # PostgreSQL
 
 #### 3) 기본 흐름
 
-- **크롤러**가 `saramin_jobs.json`에 공고 저장
-- **API**가 `GET /jobs`로 공고 조회 → bulk 저장 또는 스코어링
-- **스케줄러**: 매시 fetch → 80점 초과 시 즉시 메일, 매일 09:00 digest
+- **크롤러**가 `saramin_jobs.json`, `jobkorea_jobs.json`에 공고 저장(또는 FastAPI로 병합 저장)
+- **API**가 `GET /jobs/saramin`, `GET /jobs/jobkorea`로 공고 조회 → 통합 후 bulk 저장 또는 스코어링
+- **스케줄러**: 매시 사람인·잡코리아 크롤링 트리거 + fetch → 80점 초과 시 즉시 메일, 매일 09:00 digest
 
 ---
 
@@ -280,26 +269,7 @@ docker-compose up -d   # PostgreSQL
 
 ## Explainable Logs
 
-스코어링 결과에 breakdown과 flags가 포함됩니다.
-
-```json
-{
-  "decision": "추천",
-  "totalScore": 78,
-  "excluded": false,
-  "breakdown": {
-    "A_location": { "score": 15, "reason": "서울/경기/대전 근무지" },
-    "B_employment": { "score": 15, "reason": "정규직" },
-    "C_role_fit": { "score": 20, "reason": "프론트엔드 중심 포지션" },
-    "D_experience_fit": { "score": 10, "reason": "타깃 3~6년 경력" },
-    "E_stack_fit": { "score": 13, "reason": "스택 트랙: E2" },
-    "F_domain": { "score": 7, "reason": "제품 + SI/금융 등 혼합 도메인" },
-    "G_culture": { "score": 6, "reason": "복지/워라밸 신호 3개 이상" },
-    "H_jd_quality": { "score": 2, "reason": "JD 정보가 보통 수준" }
-  },
-  "flags": []
-}
-```
+스코어링 결과에는 위 예시처럼 `breakdown`(A~H 항목별 사유), `matchedKeywords`, `matchedStackKeywords`, `flags`가 함께 포함되어 **왜 이 점수가 나왔는지**를 확인할 수 있습니다.
 
 ---
 
