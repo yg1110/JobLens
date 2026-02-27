@@ -13,7 +13,7 @@ from saramin.models import JobPosting
 
 # API 기본 요청값(초기값)
 DEFAULT_CRAWL_REQUEST = {
-    "url": "https://www.saramin.co.kr/zf_user/jobs/list/job-category?page=1&cat_kewd=87%2C84%2C92&job_type=1&exc_keyword=php&loc_mcd=101000%2C102000%2C108000&search_optional_item=y&search_done=y&panel_count=y&preview=y&sort=RD&isAjaxRequest=1&page_count=50&type=job-category&is_param=1&isSearchResultEmpty=1&isSectionHome=0&searchParamCount=4#searchTitle",
+    "url": "https://www.saramin.co.kr/zf_user/jobs/list/domestic?loc_mcd=101000%2C102000%2C108000&cat_kewd=84%2C87%2C86%2C92&job_type=1&exc_keyword=php%2Cjsp%2Cjava%2Cspring&panel_type=&search_optional_item=y&search_done=y&panel_count=y&preview=y&page=1&sort=RD",
     "pages": 1,
     "recruit_page_count": 20,
     "list_delay": 1.8,

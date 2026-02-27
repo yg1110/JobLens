@@ -73,7 +73,7 @@ crawler/
 ### 1) 가상환경 생성(권장)
 
 ```bash
-python -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate
 ```
 
