@@ -1,121 +1,141 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>JobLens 오늘의 Digest</title>
-  <style>
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-      font-size: 15px;
-      line-height: 1.5;
-      color: #1a1a2e;
-      background-color: #f0f2f5;
-    }
-    .wrapper {
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 24px 16px;
-    }
-    .card {
-      background: #ffffff;
-      border-radius: 12px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-      overflow: hidden;
-      margin-bottom: 24px;
-    }
-    .header {
-      background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
-      color: #ffffff;
-      padding: 24px;
-      text-align: center;
-    }
-    .header h1 {
-      margin: 0;
-      font-size: 22px;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-    }
-    .header .badge {
-      display: inline-block;
-      margin-top: 8px;
-      padding: 6px 12px;
-      background: rgba(255,255,255,0.25);
-      border-radius: 20px;
-      font-size: 14px;
-      font-weight: 600;
-    }
-    .content {
-      padding: 20px 24px;
-    }
-    .item {
-      border: 1px solid #e5e7eb;
-      border-radius: 10px;
-      padding: 16px 18px;
-      margin-bottom: 12px;
-      background: #fafafa;
-    }
-    .item:last-child { margin-bottom: 0; }
-    .item-title {
-      font-size: 16px;
-      font-weight: 600;
-      color: #111827;
-      margin-bottom: 6px;
-    }
-    .item-meta {
-      font-size: 13px;
-      color: #6b7280;
-      margin-bottom: 8px;
-    }
-    .item-score {
-      display: inline-block;
-      background: #0ea5e9;
-      color: #fff;
-      padding: 4px 10px;
-      border-radius: 6px;
-      font-size: 13px;
-      font-weight: 600;
-      margin-right: 8px;
-    }
-    .item-stack {
-      font-size: 12px;
-      color: #6b7280;
-      margin-top: 8px;
-    }
-    .item-link {
-      display: inline-block;
-      margin-top: 10px;
-      padding: 8px 14px;
-      background: #0ea5e9;
-      color: #ffffff !important;
-      text-decoration: none;
-      border-radius: 8px;
-      font-size: 13px;
-      font-weight: 600;
-    }
-    .footer {
-      text-align: center;
-      padding: 16px;
-      font-size: 12px;
-      color: #9ca3af;
-    }
-  </style>
-</head>
-<body>
-  <div class="wrapper">
-    <div class="card">
-      <div class="header">
-        <h1>오늘의 추천 채용 공고</h1>
-        <span class="badge">{{COUNT}}건</span>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JobLens 오늘의 Digest</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        padding: 0;
+        font-family:
+          "Inter",
+          -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
+        background-color: #f8fafc;
+        color: #1e293b;
+      }
+      .wrapper {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 40px 20px;
+      }
+      .card {
+        background: #ffffff;
+        border-radius: 24px;
+        box-shadow:
+          0 10px 25px -5px rgba(0, 0, 0, 0.05),
+          0 8px 10px -6px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+        border: 1px solid #f1f5f9;
+      }
+      .header {
+        background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
+        padding: 40px 32px;
+        text-align: left;
+      }
+      .header h1 {
+        margin: 0;
+        font-size: 28px;
+        font-weight: 700;
+        color: #ffffff;
+        letter-spacing: -0.03em;
+      }
+      .header p {
+        margin: 8px 0 0;
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 16px;
+      }
+      .badge {
+        display: inline-block;
+        margin-top: 16px;
+        padding: 6px 14px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 100px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #ffffff;
+      }
+      .content {
+        padding: 32px;
+      }
+      .section-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 20px;
+        display: block;
+      }
+      .item {
+        padding: 20px;
+        margin-bottom: 16px;
+        background: #ffffff;
+        border: 1px solid #f1f5f9;
+        border-radius: 16px;
+      }
+      .item:last-child {
+        margin-bottom: 0;
+      }
+      .item-title {
+        font-size: 17px;
+        font-weight: 600;
+        color: #0f172a;
+        margin-bottom: 4px;
+      }
+      .item-company {
+        font-size: 14px;
+        color: #64748b;
+        margin-bottom: 12px;
+      }
+      .item-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 16px;
+        padding-top: 16px;
+        border-top: 1px solid #f8fafc;
+      }
+      .score-text {
+        font-size: 13px;
+        font-weight: 600;
+        color: #0ea5e9;
+      }
+      .item-link {
+        color: #2563eb !important;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .footer {
+        text-align: center;
+        padding: 32px 16px;
+        font-size: 13px;
+        color: #94a3b8;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrapper">
+      <div class="card">
+        <div class="header">
+          <h1>오늘의 추천 Digest</h1>
+          <p>오늘 하루 놓치지 말아야 할 채용 소식입니다.</p>
+          <span class="badge">{{COUNT}}건의 새로운 공고</span>
+        </div>
+        <div class="content">
+          <span class="section-title">추천 리스트</span>
+          {{ITEMS}}
+        </div>
       </div>
-      <div class="content">
-        {{ITEMS}}
-      </div>
+      <div class="footer">JobLens · 매일 아침 전해드리는 커리어 소식<br /></div>
     </div>
-    <div class="footer">JobLens · 채용 공고 Digest</div>
-  </div>
-</body>
+  </body>
 </html>
