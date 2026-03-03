@@ -3,6 +3,7 @@ package com.joblens.api.jobposting.web.dto;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.joblens.api.config.CrawlerDefaults;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
@@ -17,7 +18,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
     description = "크롤링 옵션. 생략 시 크롤러 기본값 사용.",
     example = """
     {
-      "url": "https://www.saramin.co.kr/zf_user/jobs/list/domestic?loc_mcd=101000%2C102000%2C108000&cat_kewd=84%2C87%2C86%2C92&job_type=1&exc_keyword=php%2Cjsp%2Cjava%2Cspring&panel_type=&search_optional_item=y&search_done=y&panel_count=y&preview=y&page=1&sort=RD",
+      "url": "https://www.saramin.co.kr/zf_user/search?loc_mcd=101000%2C102000%2C108000&cat_mcls=2&job_type=1&exc_keyword=php%2C%ED%97%A4%EB%93%9C%2Csi&company_cd=0%2C1%2C2%2C3%2C4%2C5%2C6%2C7%2C9%2C10&keydownAccess=&searchType=search&searchword=%ED%92%80&panel_type=&search_optional_item=y&search_done=y&panel_count=y&preview=y",
       "pages": 3,
       "recruit_page_count": 10,
       "list_delay": 1.8,
@@ -31,9 +32,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
     """
 )
 public class CrawlRequest {
-
-    /** 매시간 스케줄 크롤링용 기본 사람인 검색 URL */
-    private static final String DEFAULT_URL = "https://www.saramin.co.kr/zf_user/jobs/list/domestic?loc_mcd=101000%2C102000%2C108000&cat_kewd=84%2C87%2C86%2C92&job_type=1&exc_keyword=php%2Cjsp%2Cjava%2Cspring&panel_type=&search_optional_item=y&search_done=y&panel_count=y&preview=y&page=1&sort=RD";
 
     @Schema(description = "사람인 검색 URL(필터 포함). 미지정 시 크롤러 기본 URL 사용")
     private String url;
@@ -115,7 +113,7 @@ public class CrawlRequest {
      */
     public static CrawlRequest defaultForHourly() {
         CrawlRequest r = new CrawlRequest();
-        r.setUrl(DEFAULT_URL);
+        r.setUrl(CrawlerDefaults.SARAMIN_DEFAULT_URL);
         r.setPages(3);
         r.setRecruitPageCount(10);
         r.setListDelay(1.8);

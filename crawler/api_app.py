@@ -7,6 +7,7 @@ from typing import Dict, List, Optional
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field, ConfigDict
 
+from config import DEFAULT_SARAMIN_LIST_URL, DEFAULT_JOBKOREA_LIST_URL
 from saramin.crawler import crawl_list, enrich_jobs_with_details, load_json
 from saramin.list_urls import with_recruit_page_count
 from saramin.models import JobPosting
@@ -20,7 +21,7 @@ from jobkorea.list_urls import with_page_size
 
 # API 기본 요청값(사람인)
 DEFAULT_CRAWL_REQUEST = {
-    "url": "https://www.saramin.co.kr/zf_user/jobs/list/domestic?loc_mcd=101000%2C102000%2C108000&cat_kewd=84%2C87%2C86%2C92&job_type=1&exc_keyword=php%2Cjsp%2Cjava%2Cspring&panel_type=&search_optional_item=y&search_done=y&panel_count=y&preview=y&page=1&sort=RD",
+    "url": DEFAULT_SARAMIN_LIST_URL,
     "pages": 3,
     "recruit_page_count": 10,
     "list_delay": 1.8,
@@ -34,7 +35,7 @@ DEFAULT_CRAWL_REQUEST = {
 
 # API 기본 요청값(잡코리아)
 DEFAULT_JOBKOREA_CRAWL_REQUEST = {
-    "url": "https://www.jobkorea.co.kr/Search?tabType=recruit&Ord=ApplyCloseDtAsc&Page_No=1&duty=1000229%2C1000230%2C1000231%2C1000232&jobtype=1&excludeText=php%2Cjava%2Cspring",
+    "url": DEFAULT_JOBKOREA_LIST_URL,
     "pages": 3,
     "recruit_page_count": 10,
     "list_delay": 1.8,

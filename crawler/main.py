@@ -25,14 +25,13 @@ import argparse
 import sys
 
 from saramin.crawler import crawl_list, enrich_jobs_with_details, save_json
+from config import DEFAULT_SARAMIN_LIST_URL
 
 
 # 기본 검색 URL:
 # - 사람인 검색 결과 페이지에 각종 필터(cat_kewd, company_cd, recruitSort 등)가 포함되어 있음
 # - recruitPage=1로 시작하지만, 실제 페이지 이동은 list_urls.build_paged_url에서 recruitPage를 덮어씀
-DEFAULT_URL = (
-  "https://www.saramin.co.kr/zf_user/jobs/list/domestic?loc_mcd=101000%2C102000%2C108000&cat_kewd=84%2C87%2C86%2C92&job_type=1&exc_keyword=php%2Cjsp%2Cjava%2Cspring&panel_type=&search_optional_item=y&search_done=y&panel_count=y&preview=y&page=1&sort=RD"
-)
+DEFAULT_URL = DEFAULT_SARAMIN_LIST_URL
 
 
 def parse_args(argv):

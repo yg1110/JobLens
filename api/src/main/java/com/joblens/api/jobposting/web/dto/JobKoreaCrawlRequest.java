@@ -3,6 +3,7 @@ package com.joblens.api.jobposting.web.dto;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.joblens.api.config.CrawlerDefaults;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
@@ -17,7 +18,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
     description = "잡코리아 크롤링 옵션. 생략 시 크롤러 기본값 사용.",
     example = """
     {
-      "url": "https://www.jobkorea.co.kr/Search?tabType=recruit&Ord=ApplyCloseDtAsc&Page_No=1&duty=1000229%2C1000230%2C1000231%2C1000232&jobtype=1&excludeText=php%2Cjava%2Cspring",
+      "url": "https://www.jobkorea.co.kr/Search?tabType=recruit&Ord=ApplyCloseDtAsc&Page_No=1&duty=1000229%2C1000230%2C1000231%2C1000232%2C1000233%2C1000234%2C1000235%2C1000236%2C1000237%2C1000239%2C1000240%2C1000238%2C1000241%2C1000242%2C1000243%2C1000244%2C1000245%2C1000246%2C1000247%2C1000417%2C1000418%2C1000419%2C1000420%2C1000421%2C1000422%2C1000423&jobtype=1&filter=3%2C1&excludeText=php%2Csi%2C%ED%97%A4%EB%93%9C",
       "pages": 3,
       "recruit_page_count": 10,
       "list_delay": 1.8,
@@ -31,9 +32,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
     """
 )
 public class JobKoreaCrawlRequest {
-
-    /** 매시간 스케줄 크롤링용 기본 잡코리아 검색 URL */
-    private static final String DEFAULT_URL = "https://www.jobkorea.co.kr/Search?tabType=recruit&Ord=ApplyCloseDtAsc&Page_No=1&duty=1000229%2C1000230%2C1000231%2C1000232&jobtype=1&excludeText=php%2Cjava%2Cspring";
 
     @Schema(description = "잡코리아 검색 URL(필터 포함). 미지정 시 크롤러 기본 URL 사용")
     private String url;
@@ -118,7 +116,7 @@ public class JobKoreaCrawlRequest {
      */
     public static JobKoreaCrawlRequest defaultForHourly() {
         JobKoreaCrawlRequest r = new JobKoreaCrawlRequest();
-        r.setUrl(DEFAULT_URL);
+        r.setUrl(CrawlerDefaults.JOBKOREA_DEFAULT_URL);
         r.setPages(3);
         r.setRecruitPageCount(10);
         r.setListDelay(1.8);

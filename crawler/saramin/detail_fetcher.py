@@ -6,6 +6,7 @@ from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
 
+from config import SARAMIN_BASE_ORIGIN
 from .detail_context import build_detail_context
 from .http import fetch_html, post_form
 from .models import DetailContext
@@ -17,7 +18,7 @@ from .models import DetailContext
 # 3) 반환 HTML에서 iframe src를 뽑아 실제 상세 HTML(iframe)을 GET
 # =====================================================================
 
-BASE = "https://www.saramin.co.kr"
+BASE = SARAMIN_BASE_ORIGIN
 VIEW_AJAX_URL = f"{BASE}/zf_user/jobs/relay/view-ajax"
 
 
