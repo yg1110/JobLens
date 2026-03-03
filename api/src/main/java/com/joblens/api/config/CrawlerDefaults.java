@@ -2,10 +2,6 @@ package com.joblens.api.config;
 
 /**
  * 크롤러 기본 설정(사람인/잡코리아 URL)을 한 곳에서 관리하는 유틸 클래스.
- *
- * - 기본값은 기존 하드코딩 값을 그대로 사용한다.
- * - 동일한 이름의 환경 변수(SARAMIN_LIST_URL, JOBKOREA_LIST_URL)가 있으면 그것을 우선 사용한다.
- *   이렇게 하면 Python 크롤러와 API가 같은 환경 변수를 공유해 주소를 한 번에 바꿀 수 있다.
  */
 public final class CrawlerDefaults {
 
@@ -13,9 +9,9 @@ public final class CrawlerDefaults {
     }
 
     private static String envOrDefault(String key, String defaultValue) {
-        String v = System.getenv(key);
+        String v = System.getProperty(key);
         if (v == null || v.isBlank()) {
-            return defaultValue;
+            v = System.getenv(key);
         }
         return v.trim();
     }
