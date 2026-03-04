@@ -3,11 +3,11 @@ package com.joblens.api.jobposting.web;
 import com.joblens.api.jobposting.client.CrawlerClient;
 import com.joblens.api.jobposting.service.JobPostingService;
 import com.joblens.api.jobposting.service.ScoringService;
-import com.joblens.api.jobposting.web.dto.CrawlRequest;
-import com.joblens.api.jobposting.web.dto.CrawlResponse;
-import com.joblens.api.jobposting.web.dto.JobKoreaCrawlRequest;
-import com.joblens.api.jobposting.web.dto.JobPostingRequest;
-import com.joblens.api.jobposting.web.dto.ScoreResponse;
+import com.joblens.api.jobposting.web.dto.jobkorea.JobKoreaCrawlRequest;
+import com.joblens.api.jobposting.web.dto.jobkorea.JobPostingRequest;
+import com.joblens.api.jobposting.web.dto.saramin.SaraminCrawlRequest;
+import com.joblens.api.jobposting.web.dto.saramin.SaraminCrawlResponse;
+import com.joblens.api.jobposting.web.dto.score.ScoreResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.http.ResponseEntity;
@@ -65,34 +65,34 @@ public class JobPostingController {
     }
 
     /**
-     * Python 크롤러 POST /crawl/saramin 을 호출하여 사람인 목록/상세 크롤링을 실행한다.
-     * 요청 바디가 없으면 스케줄에서 사용하는 기본 옵션(CrawlRequest.defaultForHourly)을 사용한다.
+     * Python 크롤러 POST /crawl/saramin을 호출하여 사람인 목록/상세 크롤링을 실행한다.
+     * 요청 바디가 없으면 기본 옵션(CrawlRequest.defaultForHourly)을 사용한다.
      */
     @Operation(
             summary = "사람인 목록/상세 크롤링 트리거",
-            description = "FastAPI 크롤러의 POST /crawl/saramin 엔드포인트를 호출하여 사람인 채용 공고를 크롤링합니다. " +
-                          "요청 바디를 생략하거나 null 로 보내면 크롤러의 기본 옵션(CrawlRequest.defaultForHourly)을 사용합니다."
+            description = "FastAPI 크롤러의 POST /crawl/saramin을 호출하여 사람인 채용 공고를 크롤링합니다. " +
+                          "요청 바디를 생략하거나 null로 보내면 크롤러의 기본 옵션(CrawlRequest.defaultForHourly)을 사용합니다."
     )
     @PostMapping("/crawl/saramin")
-    public ResponseEntity<CrawlResponse> crawlSaramin(@RequestBody(required = false) CrawlRequest request) {
-        CrawlRequest effective = request != null ? request : CrawlRequest.defaultForHourly();
-        CrawlResponse response = crawlerClient.crawlSaramin(effective);
+    public ResponseEntity<SaraminCrawlResponse> crawlSaramin(@RequestBody(required = false) SaraminCrawlRequest request) {
+        SaraminCrawlRequest effective = request != null ? request : SaraminCrawlRequest.defaultForHourly();
+        SaraminCrawlResponse response = crawlerClient.crawlSaramin(effective);
         return ResponseEntity.ok(response);
     }
 
     /**
-     * Python 크롤러 POST /crawl/jobkorea 를 호출하여 잡코리아 목록/상세 크롤링을 실행한다.
+     * Python 크롤러 POST /crawl/jobkorea를 호출하여 잡코리아 목록/상세 크롤링을 실행한다.
      * 요청 바디가 없으면 기본 옵션(JobKoreaCrawlRequest.defaultForHourly)을 사용한다.
      */
     @Operation(
             summary = "잡코리아 목록/상세 크롤링 트리거",
-            description = "FastAPI 크롤러의 POST /crawl/jobkorea 엔드포인트를 호출하여 잡코리아 채용 공고를 크롤링합니다. " +
-                          "요청 바디를 생략하거나 null 로 보내면 크롤러의 기본 옵션(JobKoreaCrawlRequest.defaultForHourly)을 사용합니다."
+            description = "FastAPI 크롤러의 POST /crawl/jobkorea를 호출하여 잡코리아 채용 공고를 크롤링합니다. " +
+                          "요청 바디를 생략하거나 null로 보내면 크롤러의 기본 옵션(JobKoreaCrawlRequest.defaultForHourly)을 사용합니다."
     )
     @PostMapping("/crawl/jobkorea")
-    public ResponseEntity<CrawlResponse> crawlJobkorea(@RequestBody(required = false) JobKoreaCrawlRequest request) {
+    public ResponseEntity<SaraminCrawlResponse> crawlJobkorea(@RequestBody(required = false) JobKoreaCrawlRequest request) {
         JobKoreaCrawlRequest effective = request != null ? request : JobKoreaCrawlRequest.defaultForHourly();
-        CrawlResponse response = crawlerClient.crawlJobkorea(effective);
+        SaraminCrawlResponse response = crawlerClient.crawlJobkorea(effective);
         return ResponseEntity.ok(response);
     }
 

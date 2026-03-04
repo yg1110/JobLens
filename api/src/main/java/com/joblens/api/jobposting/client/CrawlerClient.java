@@ -1,10 +1,10 @@
 package com.joblens.api.jobposting.client;
 
-import com.joblens.api.jobposting.web.dto.CrawlRequest;
-import com.joblens.api.jobposting.web.dto.CrawlResponse;
-import com.joblens.api.jobposting.web.dto.JobKoreaCrawlRequest;
 import com.joblens.api.jobposting.web.dto.JobsFileResponse;
-import com.joblens.api.jobposting.web.dto.JobPostingRequest;
+import com.joblens.api.jobposting.web.dto.jobkorea.JobKoreaCrawlRequest;
+import com.joblens.api.jobposting.web.dto.jobkorea.JobPostingRequest;
+import com.joblens.api.jobposting.web.dto.saramin.SaraminCrawlRequest;
+import com.joblens.api.jobposting.web.dto.saramin.SaraminCrawlResponse;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -146,7 +146,7 @@ public class CrawlerClient {
      * @param request 크롤 옵션 (url, pages, detail 등). null 또는 빈 필드 시 크롤러 기본값 사용
      * @return 크롤링 결과 (수집 개수, 저장 여부, 공고 목록)
      */
-    public CrawlResponse crawlSaramin(CrawlRequest request) {
+    public SaraminCrawlResponse crawlSaramin(SaraminCrawlRequest request) {
         return postCrawl("/crawl/saramin", request, "saramin");
     }
 
@@ -156,18 +156,18 @@ public class CrawlerClient {
      * @param request 크롤 옵션 (url, pages, detail 등). null 또는 빈 필드 시 크롤러 기본값 사용
      * @return 크롤링 결과 (수집 개수, 저장 여부, 공고 목록)
      */
-    public CrawlResponse crawlJobkorea(JobKoreaCrawlRequest request) {
+    public SaraminCrawlResponse crawlJobkorea(JobKoreaCrawlRequest request) {
         return postCrawl("/crawl/jobkorea", request, "jobkorea");
     }
 
     /**
      * 기존 사용 코드를 위한 사람인 크롤링 alias (POST /crawl/saramin).
      */
-    public CrawlResponse crawl(CrawlRequest request) {
+    public SaraminCrawlResponse crawl(SaraminCrawlRequest request) {
         return crawlSaramin(request);
     }
 
-    private CrawlResponse postCrawl(String url, Object request, String source) {
+    private SaraminCrawlResponse postCrawl(String url, Object request, String source) {
         try {
             log.info("[CrawlerClient] 크롤 요청 POST {}{} (source={}) body={}", baseUrl, url, source, request);
         } catch (Exception e) {
@@ -175,14 +175,14 @@ public class CrawlerClient {
         }
 
         try {
-            CrawlResponse response = restClient.post()
+            SaraminCrawlResponse response = restClient.post()
                 .uri(url)
                 .accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(request)
                 .retrieve()
-                .body(CrawlResponse.class);
-            CrawlResponse result = response != null ? response : new CrawlResponse();
+                .body(SaraminCrawlResponse.class);
+            SaraminCrawlResponse result = response != null ? response : new SaraminCrawlResponse();
             int count = result.getCount();
             log.info("[CrawlerClient] 크롤 완료 source={} count={}", source, count);
             return result;

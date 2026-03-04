@@ -1,13 +1,14 @@
-package com.joblens.api.jobposting.web.dto;
+package com.joblens.api.jobposting.web.dto.saramin;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.joblens.api.jobposting.web.dto.jobkorea.JobPostingRequest;
 
 import java.util.List;
 
 /**
  * Python 크롤러 POST /crawl 응답 모델.
  */
-public class CrawlResponse {
+public class SaraminCrawlResponse {
 
     private int count;
 

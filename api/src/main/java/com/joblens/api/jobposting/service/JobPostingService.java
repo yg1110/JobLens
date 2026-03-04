@@ -2,7 +2,7 @@ package com.joblens.api.jobposting.service;
 
 import com.joblens.api.jobposting.domain.JobPosting;
 import com.joblens.api.jobposting.domain.JobPostingRepository;
-import com.joblens.api.jobposting.web.dto.JobPostingRequest;
+import com.joblens.api.jobposting.web.dto.jobkorea.JobPostingRequest;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

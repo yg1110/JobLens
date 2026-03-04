@@ -1,4 +1,4 @@
-package com.joblens.api.jobposting.web.dto;
+package com.joblens.api.jobposting.web.dto.jobkorea;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

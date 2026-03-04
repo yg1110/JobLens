@@ -1,4 +1,4 @@
-package com.joblens.api.jobposting.web.dto;
+package com.joblens.api.jobposting.web.dto.score;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 

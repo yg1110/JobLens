@@ -20,8 +20,8 @@ import com.joblens.api.jobposting.client.CrawlerClient;
 import com.joblens.api.jobposting.domain.JobPostingNotification;
 import com.joblens.api.jobposting.domain.JobPostingNotificationRepository;
 import com.joblens.api.jobposting.service.ScoringService;
-import com.joblens.api.jobposting.web.dto.JobPostingRequest;
-import com.joblens.api.jobposting.web.dto.ScoreResponse;
+import com.joblens.api.jobposting.web.dto.jobkorea.JobPostingRequest;
+import com.joblens.api.jobposting.web.dto.score.ScoreResponse;
 
 import jakarta.mail.MessagingException;
 

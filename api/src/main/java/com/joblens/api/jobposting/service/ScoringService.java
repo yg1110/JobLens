@@ -1,10 +1,11 @@
 package com.joblens.api.jobposting.service;
 
-import com.joblens.api.jobposting.web.dto.JobPostingRequest;
-import com.joblens.api.jobposting.web.dto.ScoreBreakdown;
-import com.joblens.api.jobposting.web.dto.ScoreComponent;
-import com.joblens.api.jobposting.web.dto.ScoreFlag;
-import com.joblens.api.jobposting.web.dto.ScoreResponse;
+import com.joblens.api.jobposting.web.dto.jobkorea.JobPostingRequest;
+import com.joblens.api.jobposting.web.dto.score.ScoreBreakdown;
+import com.joblens.api.jobposting.web.dto.score.ScoreComponent;
+import com.joblens.api.jobposting.web.dto.score.ScoreFlag;
+import com.joblens.api.jobposting.web.dto.score.ScoreResponse;
+
 import org.springframework.stereotype.Service;
 
 import java.util.*;

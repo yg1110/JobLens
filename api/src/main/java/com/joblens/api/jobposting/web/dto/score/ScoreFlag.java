@@ -1,4 +1,4 @@
-package com.joblens.api.jobposting.web.dto;
+package com.joblens.api.jobposting.web.dto.score;
 
 public class ScoreFlag {
 

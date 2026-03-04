@@ -8,6 +8,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
 
+// ShedLock JDBC 설정
 @Configuration
 public class SchedulerLockConfig {
 

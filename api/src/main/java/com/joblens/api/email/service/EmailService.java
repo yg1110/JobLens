@@ -59,16 +59,11 @@ public class EmailService {
         }
     }
 
-    public void sendSimpleEmailToMany(java.util.List<String> toList, String subject, String text) {
-        for (String to : toList) {
-            if (to != null && !to.isBlank()) {
-                sendSimpleEmail(to, subject, text);
-            }
-        }
-    }
-
+    
+    /**
+     * 발신자 이메일 주소
+     */
     private String resolveFrom() {
-        return (mailFrom != null && !mailFrom.isBlank()) ? mailFrom
-                : (defaultFrom != null && !defaultFrom.isBlank() ? defaultFrom : "noreply@joblens.local");
+        return "noreply@joblens.com";
     }
 }

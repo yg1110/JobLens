@@ -1,4 +1,4 @@
-package com.joblens.api.jobposting.web.dto;
+package com.joblens.api.jobposting.web.dto.score;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

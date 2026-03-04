@@ -3,9 +3,10 @@ package com.joblens.api.jobposting.scheduler;
 import com.joblens.api.jobposting.client.CrawlerClient;
 import com.joblens.api.jobposting.notification.JobPostingNotificationService;
 import com.joblens.api.jobposting.notification.NotificationProperties;
-import com.joblens.api.jobposting.web.dto.CrawlRequest;
-import com.joblens.api.jobposting.web.dto.CrawlResponse;
-import com.joblens.api.jobposting.web.dto.JobKoreaCrawlRequest;
+import com.joblens.api.jobposting.web.dto.jobkorea.JobKoreaCrawlRequest;
+import com.joblens.api.jobposting.web.dto.saramin.SaraminCrawlRequest;
+import com.joblens.api.jobposting.web.dto.saramin.SaraminCrawlResponse;
+
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,8 +59,8 @@ public class JobPostingEmailScheduler {
             return;
         }
         try {
-            CrawlRequest request = CrawlRequest.defaultForHourly();
-            CrawlResponse response = crawlerClient.crawlSaramin(request);
+            SaraminCrawlRequest request = SaraminCrawlRequest.defaultForHourly();
+            SaraminCrawlResponse response = crawlerClient.crawlSaramin(request);
             log.info("[Scheduler] hourlySaraminCrawlTrigger 정상 완료 count={}", response.getCount());
         } catch (Exception e) {
             log.error("[Scheduler] hourlySaraminCrawlTrigger 실패: {}", e.getMessage(), e);
@@ -84,7 +85,7 @@ public class JobPostingEmailScheduler {
         }
         try {
             JobKoreaCrawlRequest request = JobKoreaCrawlRequest.defaultForHourly();
-            CrawlResponse response = crawlerClient.crawlJobkorea(request);
+            SaraminCrawlResponse response = crawlerClient.crawlJobkorea(request);
             log.info("[Scheduler] hourlyJobkoreaCrawlTrigger 정상 완료 count={}", response.getCount());
         } catch (Exception e) {
             log.error("[Scheduler] hourlyJobkoreaCrawlTrigger 실패: {}", e.getMessage(), e);

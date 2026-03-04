@@ -11,7 +11,7 @@ import java.nio.file.Paths;
 
 @SpringBootApplication
 @EnableScheduling
-@EnableSchedulerLock(defaultLockAtMostFor = "PT10M")
+@EnableSchedulerLock(defaultLockAtMostFor = "PT10M") // scheduler lock 기본 10분
 public class ApiApplication {
 
 	public static void main(String[] args) {
