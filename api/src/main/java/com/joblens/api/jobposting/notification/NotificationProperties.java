@@ -22,7 +22,6 @@ public class NotificationProperties {
 
     /** 알림 기능 전체 on/off */
     private boolean enabled = false;
-
     /** 즉시 발송·digest 점수 임계값 */
     private Threshold threshold = new Threshold();
     /** 즉시 메일 발송 제한 시간대 (향후 확장용) */

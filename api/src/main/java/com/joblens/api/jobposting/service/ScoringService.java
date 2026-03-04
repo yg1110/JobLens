@@ -10,19 +10,34 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 
+/**
+ * 채용공고 스코어링 서비스.
+ * <p>
+ * 총점(100) = A_location(10) + C_role_fit(30) + E_stack_fit(60).
+ * B/D/F/G/H는 참고용이며 총점에는 미반영.
+ * </p>
+ */
 @Service
 public class ScoringService {
 
-    /** A_location: 서울/경기/인천 10점 */
+    // ---------- 총점 반영 (total = A + C + E) ----------
+    /** A_location: 서울/경기/인천, 만점 10 */
     private static final int MAX_LOCATION = 10;
-    private static final int MAX_EMPLOYMENT = 15;
-    /** C_role_fit: 풀스택 > 프론트 > 백엔드, 만점 30 */
+    /** C_role_fit: 풀스택(30) > 프론트(20) > 앱(15) > 백엔드(10), 만점 30 */
     private static final int MAX_ROLE_FIT = 30;
-    private static final int MAX_EXPERIENCE_FIT = 10;
-    /** E_stack_fit: 스택 트랙 동일 로직, 만점 60 */
+    /** E_stack_fit: 스택 트랙 e1~e5, 만점 60 */
     private static final int MAX_STACK_FIT = 60;
+
+    // ---------- 참고용 (브레이크다운만, 총점 미반영) ----------
+    /** B_employment: 정규직 15점 등 */
+    private static final int MAX_EMPLOYMENT = 15;
+    /** D_experience_fit: 경력 적합도 */
+    private static final int MAX_EXPERIENCE_FIT = 10;
+    /** F_domain: 제품/혼합/레거시 도메인 */
     private static final int MAX_DOMAIN = 10;
+    /** G_culture: 복지/워라밸 신호 */
     private static final int MAX_CULTURE = 10;
+    /** H_jd_quality: JD 분량·섹션 수 */
     private static final int MAX_JD_QUALITY = 5;
 
     private final ScoringKeywordsProperties keywords;
@@ -42,7 +57,7 @@ public class ScoringService {
 
         String text = buildSearchText(request);
 
-        // Hard filter 먼저 적용 (HF-1 계약직만)
+        // HF-1: 계약직/기간제면 제외, 총점 0
         if (isContractPosition(request, text, matchedKeywords, flags)) {
             response.setExcluded(true);
             response.setDecision("제외");
@@ -75,7 +90,7 @@ public class ScoringService {
         ScoreComponent hJdQuality = scoreJdQuality(request, matchedKeywords);
         breakdown.sethJdQuality(hJdQuality);
 
-        // 총점: A_location(10) + C_role_fit(30) + E_stack_fit(60) = 100
+        // 총점 = A + C + E (B/D/F/G/H 미반영)
         int total = aLocation.getScore() + cRoleFit.getScore() + stackScoreResult.component().getScore();
         response.setTotalScore(total);
         response.setExcluded(false);
@@ -213,7 +228,7 @@ public class ScoringService {
         String reason = "역할 적합도 낮음";
         List<String> matched = new ArrayList<>();
 
-        // 풀스택(30) > 프론트(20) > 백엔드(10) 우선순위
+        // 풀스택(30) > 프론트(20) > 앱(15) > 백엔드(10)
         if (role.containsKey("fullstack")) {
             List<String> hits = findMatched(role.get("fullstack"), target);
             if (!hits.isEmpty()) {
@@ -302,7 +317,7 @@ public class ScoringService {
         return new ScoreComponent("D", "experience_fit", score, MAX_EXPERIENCE_FIT, reason);
     }
 
-    /** 스택 트랙 순서(우선순위) 및 만점 60 기준 점수. e1=최상 > e5=최하 */
+    /** E_stack_fit: 트랙 우선순위 e1(60) > e2(48) > e3(36) > e4(24) > e5(12) */
     private static final List<StackTier> STACK_TIERS = List.of(
             new StackTier("e1", 60),
             new StackTier("e2", 48),
@@ -447,6 +462,7 @@ public class ScoringService {
         return new ScoreComponent("H", "jd_quality", score, MAX_JD_QUALITY, reason);
     }
 
+    /** 총점 기준: 70+ 추천, 50+ 보류, 50 미만 비추천 */
     private String decide(int total) {
         if (total >= 70) {
             return "추천";
