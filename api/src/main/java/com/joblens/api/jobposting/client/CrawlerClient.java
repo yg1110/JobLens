@@ -1,8 +1,8 @@
 package com.joblens.api.jobposting.client;
 
-import com.joblens.api.jobposting.web.dto.JobsFileResponse;
+import com.joblens.api.jobposting.web.dto.job.JobPostingRequest;
+import com.joblens.api.jobposting.web.dto.job.JobsFileResponse;
 import com.joblens.api.jobposting.web.dto.jobkorea.JobKoreaCrawlRequest;
-import com.joblens.api.jobposting.web.dto.jobkorea.JobPostingRequest;
 import com.joblens.api.jobposting.web.dto.saramin.SaraminCrawlRequest;
 import com.joblens.api.jobposting.web.dto.saramin.SaraminCrawlResponse;
 

@@ -3,8 +3,8 @@ package com.joblens.api.jobposting.web;
 import com.joblens.api.jobposting.client.CrawlerClient;
 import com.joblens.api.jobposting.service.JobPostingService;
 import com.joblens.api.jobposting.service.ScoringService;
+import com.joblens.api.jobposting.web.dto.job.JobPostingRequest;
 import com.joblens.api.jobposting.web.dto.jobkorea.JobKoreaCrawlRequest;
-import com.joblens.api.jobposting.web.dto.jobkorea.JobPostingRequest;
 import com.joblens.api.jobposting.web.dto.saramin.SaraminCrawlRequest;
 import com.joblens.api.jobposting.web.dto.saramin.SaraminCrawlResponse;
 import com.joblens.api.jobposting.web.dto.score.ScoreResponse;
@@ -43,6 +43,7 @@ public class JobPostingController {
         JobPostingService.SaveResult result = service.upsertAll(jobs);
         return ResponseEntity.ok(result);
     }
+    
 
     /**
      * Python 크롤러 GET /jobs/saramin, /jobs/jobkorea 로 조회한 통합 공고 목록에 대해

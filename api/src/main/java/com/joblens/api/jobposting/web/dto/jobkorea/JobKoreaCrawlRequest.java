@@ -9,7 +9,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 /**
  * Python 잡코리아 크롤러 POST /crawl/jobkorea 요청 모델.
  *
- * - Python JobKoreaCrawlRequest(api_app.py)와 동일한 필드 구성
  * - 입력(JSON)은 snake_case와 camelCase 모두 허용 (@JsonAlias)
  * - 직렬화(크롤러로 전송)는 snake_case로 고정 (@JsonProperty)
  */
@@ -40,11 +39,8 @@ public class JobKoreaCrawlRequest {
     private Integer pages;
 
     @JsonProperty("recruit_page_count")
-    @JsonAlias({"recruitPageCount", "page_size", "pageSize"})
-    @Schema(
-        description = "페이지당 목록 개수(recruit_page_count). 1, 10, 20, 30, 40, 50, 80, 100 등. 미지정 시 URL 기존값 유지",
-        name = "recruit_page_count"
-    )
+    @JsonAlias({"recruitPageCount"})
+    @Schema(description = "페이지당 목록 개수(1, 10, 20, 30, 40, 50, 80, 100 등)", name = "recruit_page_count")
     private Integer recruitPageCount;
 
     @JsonProperty("list_delay")
@@ -111,8 +107,7 @@ public class JobKoreaCrawlRequest {
     public void setSaveToFile(Boolean saveToFile) { this.saveToFile = saveToFile; }
 
     /**
-     * 매시간 스케줄 크롤링에 사용하는 기본 요청.
-     * (url, pages=1, recruit_page_count=20, list_delay=1.8, detail=true, detail_limit=20, detail_delay=1.2, ocr=true, ocr_max_images=3, save_to_file=true)
+     * 매시간 50분 스케줄 크롤링에 사용하는 기본 요청.
      */
     public static JobKoreaCrawlRequest defaultForHourly() {
         JobKoreaCrawlRequest r = new JobKoreaCrawlRequest();

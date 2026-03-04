@@ -1,6 +1,6 @@
 package com.joblens.api.jobposting.service;
 
-import com.joblens.api.jobposting.web.dto.jobkorea.JobPostingRequest;
+import com.joblens.api.jobposting.web.dto.job.JobPostingRequest;
 import com.joblens.api.jobposting.web.dto.score.ScoreBreakdown;
 import com.joblens.api.jobposting.web.dto.score.ScoreComponent;
 import com.joblens.api.jobposting.web.dto.score.ScoreFlag;

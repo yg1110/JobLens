@@ -1,7 +1,7 @@
 package com.joblens.api.jobposting.web.dto.saramin;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.joblens.api.jobposting.web.dto.jobkorea.JobPostingRequest;
+import com.joblens.api.jobposting.web.dto.job.JobPostingRequest;
 
 import java.util.List;
 

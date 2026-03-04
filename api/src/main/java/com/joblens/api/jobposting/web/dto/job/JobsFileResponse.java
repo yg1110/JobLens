@@ -1,7 +1,6 @@
-package com.joblens.api.jobposting.web.dto;
+package com.joblens.api.jobposting.web.dto.job;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.joblens.api.jobposting.web.dto.jobkorea.JobPostingRequest;
 
 import java.util.List;
 
@@ -24,6 +23,7 @@ public class JobsFileResponse {
     public void setCount(int count) {
         this.count = count;
     }
+
 
     public String getFilePath() {
         return filePath;

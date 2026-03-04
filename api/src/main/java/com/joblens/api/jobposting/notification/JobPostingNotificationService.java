@@ -20,7 +20,7 @@ import com.joblens.api.jobposting.client.CrawlerClient;
 import com.joblens.api.jobposting.domain.JobPostingNotification;
 import com.joblens.api.jobposting.domain.JobPostingNotificationRepository;
 import com.joblens.api.jobposting.service.ScoringService;
-import com.joblens.api.jobposting.web.dto.jobkorea.JobPostingRequest;
+import com.joblens.api.jobposting.web.dto.job.JobPostingRequest;
 import com.joblens.api.jobposting.web.dto.score.ScoreResponse;
 
 import jakarta.mail.MessagingException;
@@ -62,7 +62,8 @@ public class JobPostingNotificationService {
      * 매시간: fetch → 스코어 → 추천만 저장/갱신 → 80점 이상 건을 모아 즉시 메일 1통 발송
      */
     @Transactional
-    public void runHourlyFetchAndImmediateSend() {
+    public void 
+    runHourlyFetchAndImmediateSend() {
         log.info("[Notification] 80점 이상 메일 전송 시작");
         if (!properties.isEnabled() || properties.getRecipients().isEmpty()) {
             log.info("[Notification] 스킵 - 알림 비활성화 또는 수신자 없음 (enabled={}, recipients={})",
