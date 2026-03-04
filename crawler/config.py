@@ -9,6 +9,38 @@ from __future__ import annotations
 """
 
 import os
+from pathlib import Path
+
+
+def _load_env_from_parent() -> None:
+    """
+    프로젝트 루트(`../.env`)에 있는 환경 변수 파일을 읽어 `os.environ`에 주입한다.
+
+    - 이미 프로세스 환경 변수에 값이 있으면 **덮어쓰지 않는다.**
+    - `KEY=VALUE` 형태의 단순한 행만 파싱한다.
+    """
+    env_path = Path(__file__).resolve().parent.parent / ".env"
+    if not env_path.is_file():
+        return
+
+    for line in env_path.read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#") or "=" not in stripped:
+            continue
+
+        key, value = stripped.split("=", 1)
+        key = key.strip()
+        value = value.strip()
+        if not key:
+            continue
+
+        # 이미 설정된 환경 변수는 보존
+        if key not in os.environ:
+            os.environ[key] = value
+
+
+# 모듈 import 시점에 한 번만 .env 로드
+_load_env_from_parent()
 
 
 def _env_or_default(key: str, default: str) -> str:
