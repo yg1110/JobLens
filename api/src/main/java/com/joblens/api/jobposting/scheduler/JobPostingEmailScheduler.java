@@ -44,7 +44,6 @@ public class JobPostingEmailScheduler {
 
     /**
      * 매시 50분: 사람인 크롤러 POST /crawl/saramin 호출.
-     * 5분 후 정각에 fetch 시 데이터 반영.
      */
     @Scheduled(cron = "0 50 7-20 * * ?", zone = "Asia/Seoul")
     @SchedulerLock(name = "hourlySaraminCrawlTrigger", lockAtMostFor = "PT4M", lockAtLeastFor = "PT1M")
@@ -69,7 +68,6 @@ public class JobPostingEmailScheduler {
 
     /**
      * 매시 55분: 잡코리아 크롤러 POST /crawl/jobkorea 호출.
-     * 5분 후 정각에 fetch 시 데이터 반영.
      */
     @Scheduled(cron = "0 55 7-20 * * ?", zone = "Asia/Seoul")
     @SchedulerLock(name = "hourlyJobkoreaCrawlTrigger", lockAtMostFor = "PT4M", lockAtLeastFor = "PT1M")
@@ -93,7 +91,7 @@ public class JobPostingEmailScheduler {
     }
 
     /**
-     * 매시간 1회 (08:00~21:59 사이만 유효). 22:00~08:00은 금지이므로 스킵.
+     * 매시간 1회  (08:00~21:59 사이만 유효)
      */
     @Scheduled(cron = "0 0 8-21 * * ?", zone = "Asia/Seoul")
     @SchedulerLock(name = "hourlyFetchAndImmediateSend", lockAtMostFor = "PT9M", lockAtLeastFor = "PT1M")

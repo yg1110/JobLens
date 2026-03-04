@@ -63,7 +63,7 @@ public class JobPostingNotificationService {
      */
     @Transactional
     public void runHourlyFetchAndImmediateSend() {
-        log.info("[Notification] 매시간 fetch·즉시발송 작업 시작");
+        log.info("[Notification] 80점 이상 메일 전송 시작");
         if (!properties.isEnabled() || properties.getRecipients().isEmpty()) {
             log.info("[Notification] 스킵 - 알림 비활성화 또는 수신자 없음 (enabled={}, recipients={})",
                     properties.isEnabled(), properties.getRecipients().size());

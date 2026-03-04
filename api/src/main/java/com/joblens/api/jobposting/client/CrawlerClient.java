@@ -16,9 +16,7 @@ import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,7 +60,7 @@ public class CrawlerClient {
     }
 
     /**
-     * 사람인 + 잡코리아 공고 목록을 모두 조회한 뒤 URL 기준으로 중복 제거하여 반환한다.
+     * 사람인 + 잡코리아 공고 목록을 모두 합쳐서 반환한다.
      *
      * @return 통합 공고 목록
      */
@@ -86,58 +84,16 @@ public class CrawlerClient {
         int jobkoreaCount = jobkorea != null ? jobkorea.size() : 0;
 
         List<JobPostingRequest> merged = new ArrayList<>();
-        Set<String> seenUrls = new HashSet<>();
-
         if (saramin != null) {
-            for (JobPostingRequest job : saramin) {
-                String url = job.getUrl();
-                if (url != null) {
-                    if (seenUrls.add(url)) {
-                        merged.add(job);
-                    }
-                } else {
-                    merged.add(job);
-                }
-            }
+            merged.addAll(saramin);
         }
-
         if (jobkorea != null) {
-            for (JobPostingRequest job : jobkorea) {
-                String url = job.getUrl();
-                if (url != null) {
-                    if (seenUrls.add(url)) {
-                        merged.add(job);
-                    }
-                } else {
-                    merged.add(job);
-                }
-            }
+            merged.addAll(jobkorea);
         }
 
-        log.info("[CrawlerClient] 공고 목록 통합 완료 - saramin={}건, jobkorea={}건, 중복 제거 후 {}건",
+        log.info("[CrawlerClient] 공고 목록 통합 완료 - saramin={}건, jobkorea={}건, 합계 {}건",
                 saraminCount, jobkoreaCount, merged.size());
         return merged;
-    }
-
-    private List<JobPostingRequest> fetchSourceJobs(String url, String source) {
-        log.info("[CrawlerClient] 공고 목록 조회 요청 GET {}{} (source={})", baseUrl, url, source);
-
-        try {
-            JobsFileResponse response = restClient.get()
-                    .uri(url)
-                    .retrieve()
-                    .body(JobsFileResponse.class);
-
-            int count = response != null ? response.getCount() : 0;
-            List<JobPostingRequest> jobs = response != null && response.getJobs() != null
-                    ? response.getJobs()
-                    : Collections.emptyList();
-            log.info("[CrawlerClient] 공고 목록 조회 완료 source={} count={}", source, count);
-            return jobs;
-        } catch (RestClientException e) {
-            log.error("[CrawlerClient] 공고 목록 조회 실패 source={}: {}", source, e.getMessage());
-            throw new CrawlerClientException("크롤러 " + url + " 호출 실패: " + e.getMessage(), e);
-        }
     }
 
     /**
@@ -167,6 +123,40 @@ public class CrawlerClient {
         return crawlSaramin(request);
     }
 
+    /**
+     * 소스별 공고 목록 조회
+     * @param url 조회 URL (GET /jobs/saramin, /jobs/jobkorea)
+     * @param source 소스 (saramin, jobkorea)
+     * @return 공고 목록
+     */
+    private List<JobPostingRequest> fetchSourceJobs(String url, String source) {
+        log.info("[CrawlerClient] 공고 목록 조회 요청 GET {}{} (source={})", baseUrl, url, source);
+
+        try {
+            JobsFileResponse response = restClient.get()
+                    .uri(url)
+                    .retrieve()
+                    .body(JobsFileResponse.class);
+
+            int count = response != null ? response.getCount() : 0;
+            List<JobPostingRequest> jobs = response != null && response.getJobs() != null
+                    ? response.getJobs()
+                    : Collections.emptyList();
+            log.info("[CrawlerClient] 공고 목록 조회 완료 source={} count={}", source, count);
+            return jobs;
+        } catch (RestClientException e) {
+            log.error("[CrawlerClient] 공고 목록 조회 실패 source={}: {}", source, e.getMessage());
+            throw new CrawlerClientException("크롤러 " + url + " 호출 실패: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 크롤링 요청 (POST /crawl/saramin, /crawl/jobkorea).
+     * @param url 요청 URL (POST /crawl/saramin, /crawl/jobkorea)
+     * @param request 요청 바디
+     * @param source 소스 (saramin, jobkorea)
+     * @return 크롤링 결과
+     */
     private SaraminCrawlResponse postCrawl(String url, Object request, String source) {
         try {
             log.info("[CrawlerClient] 크롤 요청 POST {}{} (source={}) body={}", baseUrl, url, source, request);
