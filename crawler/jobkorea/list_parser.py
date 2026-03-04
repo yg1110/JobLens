@@ -211,7 +211,6 @@ def parse_list_page(html: str, base_origin: str, page: int) -> List[JobPosting]:
                 job_condition=job_condition,
                 sector=sector,
                 deadline=deadline,
-                scraped_at=time.time(),
                 source_page=page,
             )
         )

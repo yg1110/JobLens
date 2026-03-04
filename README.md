@@ -29,9 +29,9 @@
 
 ## 프로젝트 구조
 
-| 디렉터리                        | 설명                                                                 |
-| ------------------------------- | -------------------------------------------------------------------- |
-| [`crawler/`](crawler/README.md) | Python 크롤러 (사람인·잡코리아 목록·상세, OCR fallback, FastAPI)     |
+| 디렉터리                        | 설명                                                                        |
+| ------------------------------- | --------------------------------------------------------------------------- |
+| [`crawler/`](crawler/README.md) | Python 크롤러 (사람인·잡코리아 목록·상세, OCR fallback, FastAPI)            |
 | [`api/`](api/README.md)         | Spring Boot API (사람인·잡코리아 통합 스코어링, bulk 저장, 이메일 스케줄러) |
 
 ---
@@ -51,7 +51,6 @@
   "job_condition": "서울 강남구 경력무관 대졸↑ 위촉직·프리랜서",
   "sector": "프론트엔드 , 기술지원 , 정보보안 , API , 데이터분석가 외 등록일 26/02/07",
   "deadline": "채용시",
-  "scraped_at": 1770424243.686791,
   "source_page": 1,
   "detail_iframe_url": "https://www.saramin.co.kr/zf_user/jobs/relay/view-detail?rec_idx=53039222&rec_seq=1&t_category=non-logged_relay_view&t_content=view_detail&t_ref=non-logged_relay_view&t_ref_content=SRI_050_VIEW_MTRX_RCT",
   "detail_sections": {
@@ -127,33 +126,14 @@
       "reason": "상세 JD 분량 및 섹션이 충분함"
     }
   },
-  "matchedStackKeywords": [
-    "React",
-    "TypeScript",
-    "Next.js"
-  ],
+  "matchedStackKeywords": ["React", "TypeScript", "Next.js"],
   "matchedKeywords": {
-    "D_experience_fit": [
-      "신입",
-      "신입/경력"
-    ],
-    "E_stack_fit": [
-      "Java"
-    ],
-    "H_jd_quality": [
-      "length=0",
-      "sections=14"
-    ],
-    "A_location": [
-      "서울 영등포구"
-    ],
-    "C_role_fit": [
-      "프론트엔드",
-      "frontend"
-    ],
-    "B_employment": [
-      "정규직"
-    ]
+    "D_experience_fit": ["신입", "신입/경력"],
+    "E_stack_fit": ["Java"],
+    "H_jd_quality": ["length=0", "sections=14"],
+    "A_location": ["서울 영등포구"],
+    "C_role_fit": ["프론트엔드", "frontend"],
+    "B_employment": ["정규직"]
   },
   "flags": []
 }
@@ -248,16 +228,16 @@ docker-compose up -d   # PostgreSQL
 
 총점은 **A_location(10) + C_role_fit(30) + E_stack_fit(60)** 만 반영합니다. B, D, F, G, H는 breakdown(참고)용입니다.
 
-| 항목             | 최대(총점 반영) | 설명                                                         |
-| ---------------- | ---------------- | ------------------------------------------------------------ |
-| A_location       | 10               | 근무지 (서울/경기/인천) — **총점 반영**                      |
-| B_employment     | 15               | 정규직 > 파견/프리랜서 > 전환형인턴 > 인턴 — 참고용           |
-| C_role_fit       | 30               | 풀스택 > 프론트 > 앱 > 백엔드 — **총점 반영**                |
-| D_experience_fit | 10               | 3~6년 > 신입/경력 > 7년↑ — 참고용                            |
-| E_stack_fit      | 60               | e1(60)>e2(48)>e3(36)>e4(24)>e5(12) — **총점 반영**          |
-| F_domain         | 10               | 제품/플랫폼 > 혼합 > 금융SI — 참고용                          |
-| G_culture        | 10               | 복지/워라밸 키워드 — 참고용                                  |
-| H_jd_quality     | 5                | JD 상세 분량·섹션 수 — 참고용                                |
+| 항목             | 최대(총점 반영) | 설명                                                |
+| ---------------- | --------------- | --------------------------------------------------- |
+| A_location       | 10              | 근무지 (서울/경기/인천) — **총점 반영**             |
+| B_employment     | 15              | 정규직 > 파견/프리랜서 > 전환형인턴 > 인턴 — 참고용 |
+| C_role_fit       | 30              | 풀스택 > 프론트 > 앱 > 백엔드 — **총점 반영**       |
+| D_experience_fit | 10              | 3~6년 > 신입/경력 > 7년↑ — 참고용                   |
+| E_stack_fit      | 60              | e1(60)>e2(48)>e3(36)>e4(24)>e5(12) — **총점 반영**  |
+| F_domain         | 10              | 제품/플랫폼 > 혼합 > 금융SI — 참고용                |
+| G_culture        | 10              | 복지/워라밸 키워드 — 참고용                         |
+| H_jd_quality     | 5               | JD 상세 분량·섹션 수 — 참고용                       |
 
 **Hard Filter (즉시 제외)**
 

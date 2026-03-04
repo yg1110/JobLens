@@ -232,7 +232,6 @@ class JobPostingResponse(BaseModel):
                 "job_condition": "서울 마포구 경력3년↑ 학력무관 계약직",
                 "sector": "백엔드/서버개발 , 앱개발 , 유지보수 , Git , API 외 수정일 26/02/06",
                 "deadline": "~ 03/07(토)",
-                "scraped_at": 1770353577.146989,
                 "source_page": 1,
                 "detail_iframe_url": "https://www.saramin.co.kr/zf_user/jobs/relay/view-detail?rec_idx=53024846&rec_seq=1&t_category=non-logged_relay_view&t_content=view_detail&t_ref=non-logged_relay_view&t_ref_content=SRI_050_VIEW_MTRX_RCT",
                 "detail_sections": {
@@ -255,7 +254,6 @@ class JobPostingResponse(BaseModel):
     job_condition: Optional[str] = None
     sector: Optional[str] = None
     deadline: Optional[str] = None
-    scraped_at: float = 0.0
     source_page: Optional[int] = None
 
     # 상세(detail) 단계 필드

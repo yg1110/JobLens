@@ -40,9 +40,6 @@ public class JobPosting {
     @Column(length = 50)
     private String deadline;
 
-    @Column(name = "scraped_at")
-    private Double scrapedAt;
-
     @Column(name = "source_page")
     private Integer sourcePage;
 
@@ -86,9 +83,6 @@ public class JobPosting {
 
     public String getDeadline() { return deadline; }
     public void setDeadline(String deadline) { this.deadline = deadline; }
-
-    public Double getScrapedAt() { return scrapedAt; }
-    public void setScrapedAt(Double scrapedAt) { this.scrapedAt = scrapedAt; }
 
     public Integer getSourcePage() { return sourcePage; }
     public void setSourcePage(Integer sourcePage) { this.sourcePage = sourcePage; }

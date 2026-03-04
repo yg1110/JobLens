@@ -34,7 +34,6 @@ public class JobPostingService {
             entity.setJobCondition(r.getJobCondition());
             entity.setSector(r.getSector());
             entity.setDeadline(r.getDeadline());
-            entity.setScrapedAt(r.getScrapedAt());
             entity.setSourcePage(r.getSourcePage());
             entity.setDetailIframeUrl(r.getDetailIframeUrl());
             entity.setDetailSections(r.getDetailSections());

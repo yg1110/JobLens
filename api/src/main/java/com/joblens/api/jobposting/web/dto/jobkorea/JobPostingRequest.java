@@ -17,9 +17,6 @@ public class JobPostingRequest {
     private String sector;
     private String deadline;
 
-    @JsonProperty("scraped_at")
-    private Double scrapedAt;
-
     @JsonProperty("source_page")
     private Integer sourcePage;
 
@@ -52,9 +49,6 @@ public class JobPostingRequest {
 
     public String getDeadline() { return deadline; }
     public void setDeadline(String deadline) { this.deadline = deadline; }
-
-    public Double getScrapedAt() { return scrapedAt; }
-    public void setScrapedAt(Double scrapedAt) { this.scrapedAt = scrapedAt; }
 
     public Integer getSourcePage() { return sourcePage; }
     public void setSourcePage(Integer sourcePage) { this.sourcePage = sourcePage; }

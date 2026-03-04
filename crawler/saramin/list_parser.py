@@ -198,7 +198,6 @@ def parse_list_page(html: str, base_origin: str, page: int) -> List[JobPosting]:
                 job_condition=job_condition,
                 sector=sector,
                 deadline=deadline,
-                scraped_at=time.time(),  # 수집 시각(Unix timestamp)
                 source_page=page,        # 어떤 페이지에서 수집됐는지
             )
         )

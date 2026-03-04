@@ -261,7 +261,6 @@ uvicorn api_app:app --reload --port 8000
           "job_condition": "...",
           "sector": "...",
           "deadline": "...",
-          "scraped_at": 1738800000.0,
           "source_page": 1,
           "detail_iframe_url": "...",
           "detail_sections": {
@@ -293,7 +292,6 @@ uvicorn api_app:app --reload --port 8000
           "job_condition": "...",
           "sector": "...",
           "deadline": "...",
-          "scraped_at": 1738800000.0,
           "source_page": 1,
           "detail_iframe_url": "...",
           "detail_sections": {
@@ -341,7 +339,6 @@ curl "http://localhost:8000/jobs/saramin"
     "job_condition": "경력 3~7년",
     "sector": "웹개발",
     "deadline": "2026-02-20 마감",
-    "scraped_at": 1738800000.0,
     "source_page": 1,
     "detail_iframe_url": "https://www.saramin.co.kr/zf_user/jobs/relay/view-detail?...",
     "detail_sections": {

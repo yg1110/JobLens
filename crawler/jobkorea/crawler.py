@@ -170,7 +170,6 @@ def _parse_jobs_from_api_response(
                 job_condition=job_condition,
                 sector=sector,
                 deadline=deadline,
-                scraped_at=time.time(),
                 source_page=page,
             )
         )

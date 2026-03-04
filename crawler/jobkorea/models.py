@@ -42,9 +42,6 @@ class JobPosting:
     # 마감일/접수기간(예: "02/20(금) 마감") - 목록에서 선택적으로 제공
     deadline: Optional[str] = None
 
-    # 수집 시각(Unix timestamp). 목록/상세 어느 단계에서든 기록 가능
-    scraped_at: float = 0.0
-
     # 이 공고가 수집된 목록 페이지 번호(추적/디버깅용)
     source_page: Optional[int] = None
 
